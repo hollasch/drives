@@ -1,0 +1,79 @@
+
+Notes for drives.exe Command-Line Tool
+
+________________________________________________________________________________
+The output needs to be more terse.
+
+    Perhaps provide options for output style.
+
+    Current Output:
+        ------------------------------------------------------------------------
+        A:\
+                  Volume Label: "srhdesk-1"
+                 Serial Number: 0x0c6ce949
+                          Type: Fixed
+                   File System: NTFS
+
+        ------------------------------------------------------------------------
+        B:\
+                  Volume Label: "srhdesk-2"
+                 Serial Number: 0xe61d0308
+                          Type: Fixed
+                   File System: NTFS
+
+        ------------------------------------------------------------------------
+        C:\
+                  Volume Label: <none>
+                 Serial Number: 0x266a1d5a
+                          Type: Fixed
+                   File System: NTFS
+
+        ------------------------------------------------------------------------
+        D:\
+                  Volume Label: <none>
+                          Type: CD-ROM
+
+        ------------------------------------------------------------------------
+        L:\
+                  Volume Label: <none>
+                          Type: Remote
+                Net Connection: "\\lorinote\c"
+
+        ------------------------------------------------------------------------
+        M:\
+                  Volume Label: "Volume0"
+                 Serial Number: 0xa00e4dfb
+                          Type: Remote
+                Net Connection: "\\v-loriwh1\c"
+                   File System: NTFS
+
+        ------------------------------------------------------------------------
+        Q:\
+                  Volume Label: "Hollasch_Go"
+                 Serial Number: 0x7668e4be
+                          Type: Fixed
+                   File System: NTFS
+
+
+    Example Terse Output:
+
+        Dr  Label          Serial    Type                    FSys
+        --  -------------  --------  ----------------------  ----
+        A:  "srhdesk-1"    0c6ce949  Fixed                   NTFS
+        B:  "srhdesk-2"    e61d0308  Fixed                   NTFS
+        C:  ""             266a1d5a  Fixed                   NTFS
+        D:  ""                   --  CD-ROM                  --
+        L:  ""                   --  Remote [\\lorinote\c]   --
+        M:  "Volume0"      a00e4dfb  Remote [\\v-loriwh1\c]  NTFS
+        Q:  "Hollasch_Go"  7668e4be  Fixed                   NTFS
+
+    Columns should be intelligently sized as above.
+
+________________________________________________________________________________
+Need to be aware of subst'ed drives
+
+    For example:
+
+        X:  "srhdesk-1"  0c6ce949  Subst [A:\srh]  NTFS
+________________________________________________________________________________
+
