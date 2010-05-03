@@ -22,10 +22,8 @@ char *DriveDesc (UINT type);
 
 inline static void print (char *string) { fputs (string, stdout); }
 
-/*
 
-*/
-
+//==================================================================================================
 
 int main (int, char* [])
 {
@@ -107,7 +105,7 @@ int main (int, char* [])
         }
         else
         {
-            print  ("\"\"");
+            print  ("  ");
         }
 
         // Pad the label to fit the maximum label length.
@@ -117,10 +115,12 @@ int main (int, char* [])
 
         // Print the drive serial number.
 
-        if (fVolInfoValid)
-            printf ("%08x  ", serialnum);
+        if (!fVolInfoValid)
+            print ("           ");
         else
-            print ("          ");
+        {
+            printf ("%04x-%04x  ", serialnum >> 16, serialnum & 0xffff);
+        }
 
         // Print the unique volume name.
 
@@ -164,10 +164,10 @@ int main (int, char* [])
         {
             if (fPrintFileSysInfo)
             {
-                printf ("Max Component Len = %d  ", maxcomponentlen);
-                printf ("FSys Flags = 0x%08x  ", filesysflags);
+                printf ("\n    Max Component Len = %d, FSys Flags = 0x%08x\n",
+                    maxcomponentlen, filesysflags);
 
-                ExpandFileSysFlags ("                        > ", filesysflags);
+                ExpandFileSysFlags ("    ", filesysflags);
             }
         }
         printf ("\n");
@@ -176,46 +176,45 @@ int main (int, char* [])
 
 
 
-/* ========================================================================= */
+//==================================================================================================
 
 void ExpandFileSysFlags (const char *prefix, DWORD flags)
 {
-    if (flags & FILE_NAMED_STREAMS)
-        printf ("%sSupports named streams\n", prefix);
+    printf ("%s%s:  Supports named streams\n",
+        prefix, (flags & FILE_NAMED_STREAMS) ? "Yes" : "No ");
 
-    if (flags & FILE_SUPPORTS_OBJECT_IDS)
-        printf ("%sSupports object identifiers\n", prefix);
+    printf ("%s%s:  Supports object identifiers\n",
+        prefix, (flags & FILE_SUPPORTS_OBJECT_IDS) ? "Yes" : "No ");
 
-    if (flags & FILE_SUPPORTS_REPARSE_POINTS)
-        printf ("%sSupports re-parse points\n", prefix);
+    printf ("%s%s:  Supports re-parse points\n",
+        prefix, (flags & FILE_SUPPORTS_REPARSE_POINTS) ? "Yes" : "No ");
 
-    if (flags & FILE_SUPPORTS_SPARSE_FILES)
-        printf ("%sSupports sparse files\n", prefix);
+    printf ("%s%s:  Supports sparse files\n",
+        prefix, (flags & FILE_SUPPORTS_SPARSE_FILES) ? "Yes" : "No ");
 
-    if (flags & FILE_VOLUME_QUOTAS)
-        printf ("%sSupports disk quotas\n", prefix);
+    printf ("%s%s:  Supports disk quotas\n",
+        prefix, (flags & FILE_VOLUME_QUOTAS) ? "Yes" : "No ");
 
-    if (flags & FS_CASE_SENSITIVE)
-        printf ("%sSupports case-sensitive file names\n", prefix);
+    printf ("%s%s:  Supports case-sensitive file names\n",
+        prefix, (flags & FS_CASE_SENSITIVE) ? "Yes" : "No ");
 
-    if (flags & FS_FILE_COMPRESSION)
-        printf ("%sSupports file-based compression\n", prefix);
+    printf ("%s%s:  Supports file-based compression\n",
+        prefix, (flags & FS_FILE_COMPRESSION) ? "Yes" : "No ");
 
-    if (flags & FS_FILE_ENCRYPTION)
-        printf ("%sSupports Encrypted File System (EFS)\n", prefix);
+    printf ("%s%s:  Supports Encrypted File System (EFS)\n",
+        prefix, (flags & FS_FILE_ENCRYPTION) ? "Yes" : "No ");
 
-    if (flags & FS_UNICODE_STORED_ON_DISK)
-        printf ("%sSupports Unicode file names\n", prefix);
+    printf ("%s%s:  Supports Unicode file names\n",
+        prefix, (flags & FS_UNICODE_STORED_ON_DISK) ? "Yes" : "No ");
 
-    if (flags & FS_CASE_IS_PRESERVED)
-        printf ("%sPreserves file name case\n", prefix);
+    printf ("%s%s:  Preserves file name case\n",
+        prefix, (flags & FS_CASE_IS_PRESERVED) ? "Yes" : "No ");
 
-    if (flags & FS_PERSISTENT_ACLS)
-        printf ("%sPreserves and enforces access control lists (ACLs)\n",
-                prefix);
+    printf ("%s%s:  Preserves and enforces access control lists (ACLs)\n",
+        prefix, (flags & FS_PERSISTENT_ACLS) ? "Yes" : "No ");
 
-    if (flags & FS_VOL_IS_COMPRESSED)
-        printf ("%sVolume is compressed\n", prefix);
+    printf ("%s%s:  Volume is compressed\n",
+        prefix, (flags & FS_VOL_IS_COMPRESSED) ? "Yes" : "No ");
 
     return;
 }
