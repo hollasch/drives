@@ -20,8 +20,11 @@ const bool fPrintFileSysInfo = false;
 void  ExpandFileSysFlags (const char *prefix, DWORD flags);
 char *DriveDesc (UINT type);
 
-inline static void print (char *string) { fputs (string, stdout); } 
+inline static void print (char *string) { fputs (string, stdout); }
 
+/*
+
+*/
 
 
 int main (int, char* [])
@@ -33,6 +36,34 @@ int main (int, char* [])
 
     DWORD    netmap_size = 256;
     wchar_t *netmap = new wchar_t [netmap_size];
+
+    // Get maximum field lengths.
+
+    int maxLabelLen = 0;
+
+    for (drive[0]='A';  drive[0] <= 'Z';  ++ drive[0])
+    {
+        wdrive[0] = L'A' + (drive[0] - 'A');
+
+        char  volLabel[256];
+        DWORD serialnum = 0;
+        DWORD maxcomponentlen = 0;
+        DWORD filesysflags = 0;
+        char  filesysname [256];
+
+        bool fVolInfoValid =
+            0 != GetVolumeInformation (
+                     drive, volLabel, sizeof(volLabel), &serialnum,
+                     &maxcomponentlen, &filesysflags,
+                     filesysname, sizeof(filesysname));
+
+        int labelLen = strlen(volLabel);
+
+        if (maxLabelLen < labelLen)
+            maxLabelLen = labelLen;
+    }
+
+    // Print information for each drive.
 
     for (drive[0]='A';  drive[0] <= 'Z';  ++ drive[0])
     {
@@ -50,7 +81,7 @@ int main (int, char* [])
             continue;
         }
 
-        char  vollabel[256];
+        char  volLabel[256];
         DWORD serialnum = 0;
         DWORD maxcomponentlen = 0;
         DWORD filesysflags = 0;
@@ -58,33 +89,59 @@ int main (int, char* [])
 
         bool fVolInfoValid =
             0 != GetVolumeInformation (
-                     drive, vollabel, sizeof(vollabel), &serialnum,
+                     drive, volLabel, sizeof(volLabel), &serialnum,
                      &maxcomponentlen, &filesysflags,
                      filesysname, sizeof(filesysname));
 
-        print ("\n-----------------------------------------------------------------------------\n");
-        printf ("%c:\\\n", drive[0]);
+        // Print drive letter.
 
-        if (fVolInfoValid && vollabel[0])
-                printf ("          Volume Label: \"%s\"\n", vollabel);
-            else
-                print  ("          Volume Label: <none>\n");
+        printf ("%c: ", drive[0]);
+
+        // Print volume label.
+
+        int labelLen = 0;
+        if (fVolInfoValid && volLabel[0])
+        {
+            printf ("\"%s\"", volLabel);
+            labelLen = strlen(volLabel);
+        }
+        else
+        {
+            print  ("\"\"");
+        }
+
+        // Pad the label to fit the maximum label length.
+
+        if (labelLen < maxLabelLen);
+            printf ("%*s", maxLabelLen - labelLen + 2, "  ");
+
+        // Print the drive serial number.
 
         if (fVolInfoValid)
-            printf ("         Serial Number: 0x%08x\n", serialnum);
+            printf ("%08x  ", serialnum);
+        else
+            print ("          ");
+
+        // Print the unique volume name.
 
         const int max_volname = 50;
         char volname [max_volname] = "";
 
-        if (  (0 == GetVolumeNameForVolumeMountPoint (drive,
-                                                      volname, max_volname))
-           && (volname[0] != 0)
-           )
+        if ((0 == GetVolumeNameForVolumeMountPoint (drive, volname, max_volname)) && (volname[0] != 0))
         {
             printf ("    Unique Volume Name: %s\n", volname);
         }
 
-        printf ("                  Type: %s\n", DriveDesc(type));
+        // Print the drive description.
+
+        printf ("%s  ", DriveDesc(type));
+
+        // Print the file system type.
+
+        if (fVolInfoValid && filesysname[0])
+            printf ("[%s]  ", filesysname);
+
+        // Print the net connection, if any.
 
         DWORD netConnRetVal;
 
@@ -92,7 +149,7 @@ int main (int, char* [])
             netConnRetVal = WNetGetConnectionW (wdrive, netmap, &netmap_size);
 
             if (netConnRetVal == NO_ERROR)
-            {   wprintf (L"        Net Connection: \"%s\"\n", netmap);
+            {   wprintf (L"--> \"%s\"  ", netmap);
             }
             else if (netConnRetVal == ERROR_MORE_DATA)
             {   delete netmap;
@@ -101,19 +158,19 @@ int main (int, char* [])
 
         } while (netConnRetVal == ERROR_MORE_DATA);
 
+        // Print the volume information.
+
         if (fVolInfoValid)
         {
-            if (filesysname[0])
-                printf ("           File System: %s\n", filesysname);
-
             if (fPrintFileSysInfo)
             {
-                printf ("     Max Component Len: %d\n", maxcomponentlen);
-                printf ("     File System Flags: 0x%08x\n", filesysflags);
+                printf ("Max Component Len = %d  ", maxcomponentlen);
+                printf ("FSys Flags = 0x%08x  ", filesysflags);
 
                 ExpandFileSysFlags ("                        > ", filesysflags);
             }
         }
+        printf ("\n");
     }
 }
 
@@ -171,13 +228,13 @@ char *DriveDesc (UINT type)
 {
     switch (type)
     {
-        case DRIVE_UNKNOWN:      return "Unknown";
-        case DRIVE_NO_ROOT_DIR:  return "No root";
+        case DRIVE_UNKNOWN:      return "Unknown  ";
+        case DRIVE_NO_ROOT_DIR:  return "No root  ";
         case DRIVE_REMOVABLE:    return "Removable";
-        case DRIVE_FIXED:        return "Fixed";
-        case DRIVE_REMOTE:       return "Remote";
-        case DRIVE_CDROM:        return "CD-ROM";
-        case DRIVE_RAMDISK:      return "RAM Disk";
+        case DRIVE_FIXED:        return "Fixed    ";
+        case DRIVE_REMOTE:       return "Remote   ";
+        case DRIVE_CDROM:        return "CD-ROM   ";
+        case DRIVE_RAMDISK:      return "RAM Disk ";
     }
     return "Unknown type";
 }
