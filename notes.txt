@@ -2,6 +2,13 @@
 Notes for drives.exe Command-Line Tool
 
 ________________________________________________________________________________
+Need to print the volume names.
+
+    To do this, use the GetVolumeNameForVolumeMountPoint() function. See
+    http://msdn.microsoft.com/en-us/library/aa364994(v=VS.85).aspx for
+    documentation.
+
+________________________________________________________________________________
 The output needs to be more terse.
 
     Perhaps provide options for output style.
