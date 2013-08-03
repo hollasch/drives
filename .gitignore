@@ -1,5 +1,10 @@
 # Git ignore file for drives tool.
 
+# Temporary Files for Now
+
+netuse.exe
+netuse.obj
+
 # Generated Files
 
 [Dd]ebug/

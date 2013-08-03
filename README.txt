@@ -11,10 +11,10 @@
 
     BUILDING
 
-    In the future I may convert this project to Visual Studio, but for now a
-    simple makefile does just fine. The makefile is meant to be run with the
-    Visual Studio 'nmake' command. Run 'nmake drives.exe' to build.
+    This project is managed with Visual Studio, and is a 64-bit application.
+    There's also a makefile that will build netuse, an experiemental tool for
+    now.
 
 
     --
-    Steve Hollasch <steve@hollasch.net>  /  2013 March 9
+    Steve Hollasch <steve@hollasch.net>  /  2013 August 3
