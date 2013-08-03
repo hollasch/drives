@@ -1,8 +1,20 @@
 # Git ignore file for drives tool.
 
-*.exe
-*.ilk
-*.obj
-*.suo
-*.pdb
+# Generated Files
 
+[Dd]ebug/
+[Rr]elease/
+ipch/
+x64/
+
+# *.exe
+# *.obj
+
+# Visual Studio Files
+*.aps
+*.ilk
+*.opensdf
+*.pdb
+*.sdf
+*.suo
+*.user
