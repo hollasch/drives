@@ -7,10 +7,7 @@ netuse.obj
 
 # Generated Files
 
-[Dd]ebug/
-[Rr]elease/
-ipch/
-x64/
+/out/
 
 # Visual Studio Files
 
