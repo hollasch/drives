@@ -13,6 +13,10 @@
 
 #include <windows.h>
 
+#include <string>
+
+using namespace std;
+
 // Program Parameters
 
 #define fPrintFileSysInfo 0
@@ -21,29 +25,39 @@ void     ExpandFileSysFlags (const wchar_t *prefix, DWORD flags);
 wchar_t *DriveDesc (UINT type);
 
 
-//==================================================================================================
-// Simple string print helper function.
-//==================================================================================================
+
+class DriveInfo
+{
+    // This class contains the information for a single drive.
+
+  public:
+    DriveInfo() {}
+
+  private:
+    
+};
+
 
 static void print (wchar_t *string)
 {
+    // Simple string print helper function.
     fputws (string, stdout);
 }
 
 
-//==================================================================================================
-// Main Program Entry Point
-//==================================================================================================
-
 int main (int, char* [])
 {
+    //==============================================================================================
+    // Main Program Entry Point
+    //==============================================================================================
+
     DWORD logicalDrives = GetLogicalDrives();
 
     wchar_t drive[]  = L"A:\\";
     wchar_t volumeLabel[256];
     wchar_t filesysname [256];
 
-    DWORD    netmap_size = 256;
+    DWORD netmap_size = 256;
     wchar_t *netmap = new wchar_t [netmap_size];
 
     // Get maximum field lengths.
@@ -180,12 +194,12 @@ int main (int, char* [])
 
 
 
-//==================================================================================================
-// Prints detailed information from the file system flags.
-//==================================================================================================
-
 void ExpandFileSysFlags (const wchar_t *prefix, DWORD flags)
 {
+    //==============================================================================================
+    // Prints detailed information from the file system flags.
+    //==============================================================================================
+
     wprintf (L"%s%s:  Supports named streams\n",
         prefix, (flags & FILE_NAMED_STREAMS) ? L"Yes" : L"No ");
 
@@ -227,12 +241,12 @@ void ExpandFileSysFlags (const wchar_t *prefix, DWORD flags)
 
 
 
-//==================================================================================================
-// Returns the string value for drive type values.
-//==================================================================================================
-
 wchar_t *DriveDesc (UINT type)
 {
+    //==============================================================================================
+    // Returns the string value for drive type values.
+    //==============================================================================================
+
     switch (type)
     {
         case DRIVE_UNKNOWN:      return L"Unknown  ";
