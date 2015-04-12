@@ -167,7 +167,7 @@ int main (int, char* [])
 
         if (fVolInfoValid)
         {
-            #if PrintFileSystemInfo
+            #if fPrintFileSysInfo
             {
                 wprintf (L"\n    Max Component Len = %d, FSys Flags = 0x%08x\n", maxComponentLength, fileSysFlags);
                 ExpandFileSysFlags (L"    ", fileSysFlags);
