@@ -10,7 +10,7 @@ static char* GetToken (char* &buffer);
 
 int main (int argc, char *argv[])
 {
-    char buffer[128];
+    char buffer[512];
 
     FILE *results = _popen ("net use", "rt");
 
@@ -48,7 +48,7 @@ int main (int argc, char *argv[])
         if ((token[0] != '\\') || (token[1] != '\\'))
             continue;
 
-        printf ("%s  %s\n", drive, token);
+        printf ("%s \"%s\"\n", drive, token);
     }
 
     _pclose (results);
