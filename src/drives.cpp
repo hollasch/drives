@@ -20,7 +20,7 @@ using namespace std;
 // Program Parameters
 
 #define PrintFileSysInfo  0
-#define PrintNewDriveInfo 0
+#define PrintNewDriveInfo 1
 
 void     ExpandFileSysFlags (const wchar_t *prefix, DWORD flags);
 wchar_t *DriveDesc (UINT type);
@@ -60,6 +60,15 @@ class DriveInfo
         isVolInfoValid = (0 != GetVolumeInformation (
             drive, volumeLabel, sizeof volumeLabel, &serialNumber, &maxComponentLength, &fileSysFlags,
             fileSysName, sizeof fileSysName));
+        
+        if (!isVolInfoValid)
+        {
+            volumeLabel[0]     = 0;
+            serialNumber       = 0;
+            maxComponentLength = 0;
+            fileSysFlags       = 0;
+            fileSysName[0]     = 0;
+        }
 
         if (0 == GetVolumeNameForVolumeMountPoint (drive, volumeName, sizeof volumeName))
             volumeName[0] = 0;
@@ -74,7 +83,6 @@ class DriveInfo
             switch (WNetGetConnectionW (driveNoSlash, netMap, &netMapBufferSize))
             {
                 case NO_ERROR:
-                    wprintf (L"--> \"%s\"  ", netMap);
                     break;
 
                 case ERROR_MORE_DATA:
@@ -97,8 +105,18 @@ class DriveInfo
         } while (retry);
     }
 
-    void DumpVolumeInformation()
+    void PrintVolumeInformation ()
     {
+        wprintf (L"%c:  \"%s\"  %04x-%04x  %s  [%s] --> %s\n",
+            drive[0],
+            volumeLabel[0] ? volumeLabel : L"",
+            serialNumber >> 16, serialNumber & 0xffff,
+            DriveDesc(driveType),
+            fileSysName,
+            netMap
+        );
+
+        /*
         wprintf(L"// Drive \"%s\" / \"%s\":\n"
                 L"    infoValid: %s,\n"
                 L"    label: \"%s\",\n"
@@ -111,6 +129,7 @@ class DriveInfo
                 L"    driveType: %016x\n",
             drive, driveNoSlash, isVolInfoValid ? L"true" : L"false", volumeLabel, volumeName, fileSysName,
             netMap ? netMap : L"<null>", serialNumber, maxComponentLength, fileSysFlags, driveType);
+        */
     }
 
   private:
@@ -282,7 +301,7 @@ int main (int, char* [])
         {
             auto driveInfo = new DriveInfo(drive[0]);
             driveInfo->LoadVolumeInformation();
-            driveInfo->DumpVolumeInformation();
+            driveInfo->PrintVolumeInformation();
             delete driveInfo;
         }
         #endif
