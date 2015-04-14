@@ -88,8 +88,8 @@ int main (int, char* [])
         {
             if (logicalDrives & (1 << (drive[0]-'A')))
             {
-                wprintf (L"%c:   Drive type is %s, but GetLogicalDrives reports "
-                         L"no drive there.\n\n", drive[0], DriveDesc(type));
+                wprintf (L"%c:   Drive type is DRIVE_NO_ROOT_DIR, "
+                         L"but GetLogicalDrives reports a drive there.\n\n", drive[0]);
             }
             continue;
         }
