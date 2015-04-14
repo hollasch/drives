@@ -19,7 +19,7 @@ using namespace std;
 
 // Program Parameters
 
-#define fPrintFileSysInfo 0
+#define PrintFileSysInfo 0
 
 void     ExpandFileSysFlags (const wchar_t *prefix, DWORD flags);
 wchar_t *DriveDesc (UINT type);
@@ -54,13 +54,13 @@ int main (int, char* [])
     DWORD logicalDrives = GetLogicalDrives();
 
     wchar_t drive[]  = L"A:\\";
-    wchar_t volumeLabel[256];
+    wchar_t volumeLabel[MAX_PATH + 1];
     wchar_t filesysname [256];
 
     DWORD netmap_size = 256;
     wchar_t *netmap = new wchar_t [netmap_size];
 
-    // Get maximum field lengths.
+    // Iterate through the drives to find the maximum volume label length.
 
     size_t maxLabelLen = 0;
 
@@ -101,7 +101,8 @@ int main (int, char* [])
         auto retval = GetVolumeInformation (
                           drive, volumeLabel, sizeof(volumeLabel), &serialNumber, &maxComponentLength,
                           &fileSysFlags, filesysname, sizeof(filesysname));
-        auto fVolInfoValid = (retval != 0);
+
+        auto isVolInfoValid = (retval != 0);
 
         // Print drive letter.
 
@@ -110,7 +111,7 @@ int main (int, char* [])
         // Print volume label.
 
         size_t labelLen = 0;
-        if (fVolInfoValid && volumeLabel[0])
+        if (isVolInfoValid && volumeLabel[0])
         {
             wprintf (L"\"%s\"", volumeLabel);
             labelLen = wcslen(volumeLabel);
@@ -127,10 +128,10 @@ int main (int, char* [])
 
         // Print the drive serial number.
 
-        if (!fVolInfoValid)
-            print (L"             ");
-        else
+        if (isVolInfoValid)
             wprintf (L"  %04x-%04x  ", serialNumber >> 16, serialNumber & 0xffff);
+        else
+            print (L"             ");
 
         // Print the unique volume name.
 
@@ -147,7 +148,7 @@ int main (int, char* [])
 
         // Print the file system type.
 
-        if (fVolInfoValid && filesysname[0])
+        if (isVolInfoValid && filesysname[0])
             wprintf (L"[%s]  ", filesysname);
 
         // Print the net connection, if any.
@@ -179,9 +180,9 @@ int main (int, char* [])
 
         // Print the volume information.
 
-        if (fVolInfoValid)
+        if (isVolInfoValid)
         {
-            #if fPrintFileSysInfo
+            #if PrintFileSysInfo
             {
                 wprintf (L"\n    Max Component Len = %d, FSys Flags = 0x%08x\n", maxComponentLength, fileSysFlags);
                 ExpandFileSysFlags (L"    ", fileSysFlags);
