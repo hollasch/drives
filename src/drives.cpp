@@ -57,8 +57,8 @@ int main (int, char* [])
     wchar_t volumeLabel[MAX_PATH + 1];
     wchar_t fileSysName [256];
 
-    DWORD netmap_size = 256;
-    wchar_t *netmap = new wchar_t [netmap_size];
+    DWORD netmapSize = 256;
+    auto  netmap = new wchar_t[netmapSize];
 
     // Iterate through the drives to find the maximum volume label length.
 
@@ -156,39 +156,34 @@ int main (int, char* [])
         DWORD netConnRetVal;
 
         do {
-            size_t driveNoSlashSize = wcslen(drive) + 1;
-            wchar_t *driveNoSlash = new wchar_t[driveNoSlashSize];
-            wcscpy_s (driveNoSlash, driveNoSlashSize, drive);
-            wchar_t *endPtr = driveNoSlash + wcslen(driveNoSlash) - 1;
-            while ((endPtr >= driveNoSlash) && (*endPtr == '\\'))
-            {
-                *endPtr = 0;
-                --endPtr;
-            }
+            // Create string of the drive with no trailing slash.
+            wchar_t driveNoSlash[] = L"*:";
+            driveNoSlash[0] = drive[0];
 
-            netConnRetVal = WNetGetConnectionW (driveNoSlash, netmap, &netmap_size);
+            netConnRetVal = WNetGetConnectionW (driveNoSlash, netmap, &netmapSize);
 
             if (netConnRetVal == NO_ERROR)
             {   wprintf (L"--> \"%s\"  ", netmap);
             }
             else if (netConnRetVal == ERROR_MORE_DATA)
             {   delete netmap;
-                netmap = new wchar_t [netmap_size];
+                netmap = new wchar_t[netmapSize];
             }
 
         } while (netConnRetVal == ERROR_MORE_DATA);
 
         // Print the volume information.
 
-        if (isVolInfoValid)
+        #if PrintFileSysInfo
         {
-            #if PrintFileSysInfo
+            if (isVolInfoValid)
             {
                 wprintf (L"\n    Max Component Len = %d, FSys Flags = 0x%08x\n", maxComponentLength, fileSysFlags);
                 ExpandFileSysFlags (L"    ", fileSysFlags);
             }
-            #endif
         }
+        #endif
+
         wprintf (L"\n");
     }
 }
