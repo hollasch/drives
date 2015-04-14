@@ -55,7 +55,7 @@ int main (int, char* [])
 
     wchar_t drive[]  = L"A:\\";
     wchar_t volumeLabel[MAX_PATH + 1];
-    wchar_t filesysname [256];
+    wchar_t fileSysName [256];
 
     DWORD netmap_size = 256;
     wchar_t *netmap = new wchar_t [netmap_size];
@@ -72,7 +72,7 @@ int main (int, char* [])
 
         auto retval = GetVolumeInformation (
                           drive, volumeLabel, sizeof(volumeLabel), &serialNumber, &maxComponentLength,
-                          &fileSysFlags, filesysname, sizeof(filesysname));
+                          &fileSysFlags, fileSysName, sizeof(fileSysName));
 
         if (retval != 0)
             maxLabelLen = max (maxLabelLen, wcslen(volumeLabel));
@@ -100,7 +100,7 @@ int main (int, char* [])
 
         auto retval = GetVolumeInformation (
                           drive, volumeLabel, sizeof(volumeLabel), &serialNumber, &maxComponentLength,
-                          &fileSysFlags, filesysname, sizeof(filesysname));
+                          &fileSysFlags, fileSysName, sizeof(fileSysName));
 
         auto isVolInfoValid = (retval != 0);
 
@@ -148,8 +148,8 @@ int main (int, char* [])
 
         // Print the file system type.
 
-        if (isVolInfoValid && filesysname[0])
-            wprintf (L"[%s]  ", filesysname);
+        if (isVolInfoValid && fileSysName[0])
+            wprintf (L"[%s]  ", fileSysName);
 
         // Print the net connection, if any.
 
