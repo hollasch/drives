@@ -20,11 +20,12 @@ using namespace std;
 // Program Parameters
 
 #define PrintFileSysInfo  0
-#define PrintNewDriveInfo 1
+#define PrintNewDriveInfo 0
 
 void     ExpandFileSysFlags (const wchar_t *prefix, DWORD flags);
 wchar_t *DriveDesc (UINT type);
 
+const int NumPossibleDrives = 26;    // Number of Possible Drives
 
 
 class DriveInfo
@@ -154,14 +155,8 @@ static void print (wchar_t *string)
 }
 
 
-int main (int, char* [])
+void printOldStyle (const DWORD logicalDrives)
 {
-    //==============================================================================================
-    // Main Program Entry Point
-    //==============================================================================================
-
-    DWORD logicalDrives = GetLogicalDrives();
-
     wchar_t drive[]  = L"A:\\";
     wchar_t volumeLabel[MAX_PATH + 1];
     wchar_t fileSysName [256];
@@ -296,16 +291,41 @@ int main (int, char* [])
             }
         }
         #endif
-
-        #if PrintNewDriveInfo
-        {
-            auto driveInfo = new DriveInfo(drive[0]);
-            driveInfo->LoadVolumeInformation();
-            driveInfo->PrintVolumeInformation();
-            delete driveInfo;
-        }
-        #endif
     }
+}
+
+
+int main (int, char* [])
+{
+    //==============================================================================================
+    // Main Program Entry Point
+    //==============================================================================================
+
+    DWORD logicalDrives = GetLogicalDrives();
+
+    printOldStyle (logicalDrives);
+
+    DriveInfo* driveInfo [NumPossibleDrives];
+
+    #if PrintNewDriveInfo
+    {
+        wprintf (L"\n--------------------------------------------------------------------------------\n");
+
+        for (unsigned short driveIndex = 0;  driveIndex < NumPossibleDrives;  ++driveIndex)
+        {
+            if (!(logicalDrives & (1 << driveIndex)))
+                continue;
+
+            wchar_t driveLetter = L'A' + driveIndex;
+
+            driveInfo[driveIndex] = new DriveInfo(driveLetter);
+            driveInfo[driveIndex]->LoadVolumeInformation();
+            driveInfo[driveIndex]->PrintVolumeInformation();
+
+            delete driveInfo[driveIndex];
+        }
+    }
+    #endif
 }
 
 
