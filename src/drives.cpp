@@ -10,7 +10,6 @@
 #include <stdio.h>
 
 #define _WIN32_WINNT 0x501   // Windows XP or Greater
-
 #include <windows.h>
 
 #include <string>
@@ -22,10 +21,11 @@ using namespace std;
 #define PrintFileSysInfo  0
 #define PrintNewDriveInfo 0
 
-void     ExpandFileSysFlags (const wchar_t *prefix, DWORD flags);
-wchar_t *DriveDesc (UINT type);
+static void     ExpandFileSysFlags (const wchar_t *prefix, DWORD flags);
+static wchar_t *DriveDesc (UINT type);
 
 const int NumPossibleDrives = 26;    // Number of Possible Drives
+
 
 
 class DriveInfo
@@ -106,11 +106,26 @@ class DriveInfo
         } while (retry);
     }
 
-    void PrintVolumeInformation ()
+    void GetMaxFieldLengths (size_t &maxLenVolumeLabel)
     {
-        wprintf (L"%c:  \"%s\"  %04x-%04x  %s  [%s] --> %s\n",
+        maxLenVolumeLabel = max (maxLenVolumeLabel, wcslen(volumeLabel));
+    }
+
+    void PrintVolumeInformation (size_t maxLenVolumeLabel)
+    {
+        // Add room for quotes to volume label.
+        maxLenVolumeLabel += 2;
+        auto lenVolumeLabel = (volumeLabel[0] == 0) ? 0 : 2 + wcslen(volumeLabel);
+
+        wstring formattedVolumeLabel;
+
+        if (volumeLabel[0])
+              formattedVolumeLabel.append(L"\"").append(volumeLabel).append(L"\"");
+        formattedVolumeLabel.append(maxLenVolumeLabel - lenVolumeLabel, L' ');
+
+        wprintf (L"%c: %s %04x-%04x  %s  [%s] --> %s\n",
             drive[0],
-            volumeLabel[0] ? volumeLabel : L"",
+            formattedVolumeLabel.c_str(),
             serialNumber >> 16, serialNumber & 0xffff,
             DriveDesc(driveType),
             fileSysName,
@@ -295,6 +310,11 @@ void printOldStyle (const DWORD logicalDrives)
 }
 
 
+bool DriveValid (DWORD logicalDrives, unsigned short driveIndex)
+{
+    return 0 != (logicalDrives & (1 << driveIndex));
+}
+
 int main (int, char* [])
 {
     //==============================================================================================
@@ -305,22 +325,34 @@ int main (int, char* [])
 
     printOldStyle (logicalDrives);
 
-    DriveInfo* driveInfo [NumPossibleDrives];
-
     #if PrintNewDriveInfo
     {
+        DriveInfo* driveInfo [NumPossibleDrives];
+
         wprintf (L"\n--------------------------------------------------------------------------------\n");
 
-        for (unsigned short driveIndex = 0;  driveIndex < NumPossibleDrives;  ++driveIndex)
-        {
-            if (!(logicalDrives & (1 << driveIndex)))
-                continue;
+        // Query all drives for volume information, and get maximum field lengths.
+        unsigned short driveIndex;
+        wchar_t        driveLetter;
 
-            wchar_t driveLetter = L'A' + driveIndex;
+        size_t maxLenVolumeLabel = 0;
+
+        for (driveIndex = 0, driveLetter = L'A';  driveIndex < NumPossibleDrives;  ++driveIndex, ++driveLetter)
+        {
+            if (!DriveValid(logicalDrives, driveIndex))
+                continue;
 
             driveInfo[driveIndex] = new DriveInfo(driveLetter);
             driveInfo[driveIndex]->LoadVolumeInformation();
-            driveInfo[driveIndex]->PrintVolumeInformation();
+            driveInfo[driveIndex]->GetMaxFieldLengths(maxLenVolumeLabel);
+        }
+
+        for (driveIndex = 0, driveLetter = L'A';  driveIndex < NumPossibleDrives;  ++driveIndex, ++driveLetter)
+        {
+            if (!DriveValid(logicalDrives, driveIndex))
+                continue;
+
+            driveInfo[driveIndex]->PrintVolumeInformation(maxLenVolumeLabel);
 
             delete driveInfo[driveIndex];
         }
@@ -330,7 +362,8 @@ int main (int, char* [])
 
 
 
-void ExpandFileSysFlags (const wchar_t *prefix, DWORD flags)
+#if PrintFileSysInfo
+static void ExpandFileSysFlags (const wchar_t *prefix, DWORD flags)
 {
     //==============================================================================================
     // Prints detailed information from the file system flags.
@@ -374,10 +407,11 @@ void ExpandFileSysFlags (const wchar_t *prefix, DWORD flags)
 
     return;
 }
+#endif
 
 
 
-wchar_t *DriveDesc (UINT type)
+static wchar_t *DriveDesc (UINT type)
 {
     //==============================================================================================
     // Returns the string value for drive type values.
