@@ -19,12 +19,26 @@ using namespace std;
 // Program Parameters
 
 #define PrintFileSysInfo  0
-#define PrintNewDriveInfo 0
+
 
 static void     ExpandFileSysFlags (const wchar_t *prefix, DWORD flags);
 static wchar_t *DriveDesc (UINT type);
 
 const int NumPossibleDrives = 26;    // Number of Possible Drives
+
+
+static void print (wchar_t *string)
+{
+    // Simple string print helper function.
+    fputws (string, stdout);
+}
+
+
+
+bool DriveValid (DWORD logicalDrives, unsigned short driveIndex)
+{
+    return 0 != (logicalDrives & (1 << driveIndex));
+}
 
 
 
@@ -113,6 +127,8 @@ class DriveInfo
 
     void PrintVolumeInformation (size_t maxLenVolumeLabel)
     {
+        wprintf (L"%c: ", drive[0]);
+
         // Add room for quotes to volume label.
         maxLenVolumeLabel += 2;
         auto lenVolumeLabel = (volumeLabel[0] == 0) ? 0 : 2 + wcslen(volumeLabel);
@@ -123,14 +139,35 @@ class DriveInfo
               formattedVolumeLabel.append(L"\"").append(volumeLabel).append(L"\"");
         formattedVolumeLabel.append(maxLenVolumeLabel - lenVolumeLabel, L' ');
 
-        wprintf (L"%c: %s %04x-%04x  %s  [%s] --> %s\n",
-            drive[0],
-            formattedVolumeLabel.c_str(),
-            serialNumber >> 16, serialNumber & 0xffff,
-            DriveDesc(driveType),
-            fileSysName,
-            netMap
-        );
+        wprintf (L"%s ", formattedVolumeLabel.c_str());
+
+        if (isVolInfoValid)
+            wprintf (L" %04x-%04x  ", serialNumber >> 16, serialNumber & 0xffff);
+        else
+            print (L"            ");
+
+        print (DriveDesc(driveType));
+
+        if (isVolInfoValid)
+            wprintf (L" [%s]  ", fileSysName);
+        else
+            print (L"         ");
+
+        if (netMap)
+            wprintf (L"--> %s", netMap);
+
+        print (L"\n");
+
+        // Print the volume information.
+        #if PrintFileSysInfo
+        {
+            if (isVolInfoValid)
+            {
+                wprintf (L"    Max Component Len = %d, FSys Flags = 0x%08x\n\n", maxComponentLength, fileSysFlags);
+                ExpandFileSysFlags (L"    ", fileSysFlags);
+            }
+        }
+        #endif
 
         /*
         wprintf(L"// Drive \"%s\" / \"%s\":\n"
@@ -163,157 +200,6 @@ class DriveInfo
 };
 
 
-static void print (wchar_t *string)
-{
-    // Simple string print helper function.
-    fputws (string, stdout);
-}
-
-
-void printOldStyle (const DWORD logicalDrives)
-{
-    wchar_t drive[]  = L"A:\\";
-    wchar_t volumeLabel[MAX_PATH + 1];
-    wchar_t fileSysName [256];
-
-    DWORD netmapSize = 256;
-    auto  netmap = new wchar_t[netmapSize];
-
-    // Iterate through the drives to find the maximum volume label length.
-
-    size_t maxLabelLen = 0;
-
-    for (drive[0]=L'A';  drive[0] <= L'Z';  ++ drive[0])
-    {
-        DWORD serialNumber = 0;
-        DWORD maxComponentLength = 0;
-        DWORD fileSysFlags = 0;
-
-        auto retval = GetVolumeInformation (
-                          drive, volumeLabel, sizeof(volumeLabel), &serialNumber, &maxComponentLength,
-                          &fileSysFlags, fileSysName, sizeof(fileSysName));
-
-        if (retval != 0)
-            maxLabelLen = max (maxLabelLen, wcslen(volumeLabel));
-    }
-
-    // Print information for each drive.
-
-    for (drive[0]='A';  drive[0] <= 'Z';  ++ drive[0])
-    {
-        UINT type = GetDriveType (drive);
-
-        if (type == DRIVE_NO_ROOT_DIR)
-        {
-            if (logicalDrives & (1 << (drive[0]-'A')))
-            {
-                wprintf (L"%c:   Drive type is DRIVE_NO_ROOT_DIR, "
-                         L"but GetLogicalDrives reports a drive there.\n\n", drive[0]);
-            }
-            continue;
-        }
-
-        DWORD serialNumber = 0;
-        DWORD maxComponentLength = 0;
-        DWORD fileSysFlags = 0;
-
-        auto retval = GetVolumeInformation (
-                          drive, volumeLabel, sizeof(volumeLabel), &serialNumber, &maxComponentLength,
-                          &fileSysFlags, fileSysName, sizeof(fileSysName));
-
-        auto isVolInfoValid = (retval != 0);
-
-        // Print drive letter.
-
-        wprintf (L"%c: ", drive[0]);
-
-        // Print volume label.
-
-        size_t labelLen = 0;
-        if (isVolInfoValid && volumeLabel[0])
-        {
-            wprintf (L"\"%s\"", volumeLabel);
-            labelLen = wcslen(volumeLabel);
-        }
-        else
-        {
-            print (L"  ");    // Make up for no double quote characters.
-        }
-
-        // Pad the label to fit the maximum label length.
-
-        if (labelLen < maxLabelLen)
-            wprintf (L"%*s", maxLabelLen - labelLen, L"");
-
-        // Print the drive serial number.
-
-        if (isVolInfoValid)
-            wprintf (L"  %04x-%04x  ", serialNumber >> 16, serialNumber & 0xffff);
-        else
-            print (L"             ");
-
-        // Print the unique volume name.
-
-        wchar_t volumeName[MAX_PATH + 1] = L"";
-
-        if (0 == GetVolumeNameForVolumeMountPoint (drive, volumeName, sizeof volumeName))
-            if (volumeName[0] != 0)
-                wprintf (L"    Unique Volume Name: %s\n", volumeName);
-
-        // Print the drive description.
-
-        wprintf (L"%s  ", DriveDesc(type));
-
-        // Print the file system type.
-
-        if (isVolInfoValid && fileSysName[0])
-            wprintf (L"[%s]  ", fileSysName);
-
-        // Print the net connection, if any.
-
-        DWORD netConnRetVal;
-        auto  attempts = 0;
-
-        do {
-            ++attempts;
-
-            // Create string of the drive with no trailing slash.
-            wchar_t driveNoSlash[] = L"*:";
-            driveNoSlash[0] = drive[0];
-
-            netConnRetVal = WNetGetConnectionW (driveNoSlash, netmap, &netmapSize);
-
-            if (netConnRetVal == NO_ERROR)
-            {   wprintf (L"--> \"%s\"  ", netmap);
-            }
-            else if (netConnRetVal == ERROR_MORE_DATA)
-            {   delete netmap;
-                netmap = new wchar_t[netmapSize];
-            }
-
-        } while ((netConnRetVal == ERROR_MORE_DATA) && (attempts < 2));
-
-        wprintf (L"\n");
-
-        // Print the volume information.
-
-        #if PrintFileSysInfo
-        {
-            if (isVolInfoValid)
-            {
-                wprintf (L"    Max Component Len = %d, FSys Flags = 0x%08x\n\n", maxComponentLength, fileSysFlags);
-                ExpandFileSysFlags (L"    ", fileSysFlags);
-            }
-        }
-        #endif
-    }
-}
-
-
-bool DriveValid (DWORD logicalDrives, unsigned short driveIndex)
-{
-    return 0 != (logicalDrives & (1 << driveIndex));
-}
 
 int main (int, char* [])
 {
@@ -323,41 +209,33 @@ int main (int, char* [])
 
     DWORD logicalDrives = GetLogicalDrives();
 
-    printOldStyle (logicalDrives);
+    DriveInfo* driveInfo [NumPossibleDrives];
 
-    #if PrintNewDriveInfo
+    // Query all drives for volume information, and get maximum field lengths.
+    unsigned short driveIndex;
+    wchar_t        driveLetter;
+
+    size_t maxLenVolumeLabel = 0;
+
+    for (driveIndex = 0, driveLetter = L'A';  driveIndex < NumPossibleDrives;  ++driveIndex, ++driveLetter)
     {
-        DriveInfo* driveInfo [NumPossibleDrives];
+        if (!DriveValid(logicalDrives, driveIndex))
+            continue;
 
-        wprintf (L"\n--------------------------------------------------------------------------------\n");
-
-        // Query all drives for volume information, and get maximum field lengths.
-        unsigned short driveIndex;
-        wchar_t        driveLetter;
-
-        size_t maxLenVolumeLabel = 0;
-
-        for (driveIndex = 0, driveLetter = L'A';  driveIndex < NumPossibleDrives;  ++driveIndex, ++driveLetter)
-        {
-            if (!DriveValid(logicalDrives, driveIndex))
-                continue;
-
-            driveInfo[driveIndex] = new DriveInfo(driveLetter);
-            driveInfo[driveIndex]->LoadVolumeInformation();
-            driveInfo[driveIndex]->GetMaxFieldLengths(maxLenVolumeLabel);
-        }
-
-        for (driveIndex = 0, driveLetter = L'A';  driveIndex < NumPossibleDrives;  ++driveIndex, ++driveLetter)
-        {
-            if (!DriveValid(logicalDrives, driveIndex))
-                continue;
-
-            driveInfo[driveIndex]->PrintVolumeInformation(maxLenVolumeLabel);
-
-            delete driveInfo[driveIndex];
-        }
+        driveInfo[driveIndex] = new DriveInfo(driveLetter);
+        driveInfo[driveIndex]->LoadVolumeInformation();
+        driveInfo[driveIndex]->GetMaxFieldLengths(maxLenVolumeLabel);
     }
-    #endif
+
+    for (driveIndex = 0, driveLetter = L'A';  driveIndex < NumPossibleDrives;  ++driveIndex, ++driveLetter)
+    {
+        if (!DriveValid(logicalDrives, driveIndex))
+            continue;
+
+        driveInfo[driveIndex]->PrintVolumeInformation(maxLenVolumeLabel);
+
+        delete driveInfo[driveIndex];
+    }
 }
 
 
