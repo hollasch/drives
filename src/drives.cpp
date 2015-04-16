@@ -136,7 +136,12 @@ class DriveInfo
         wstring formattedVolumeLabel;
 
         if (volumeLabel[0])
-              formattedVolumeLabel.append(L"\"").append(volumeLabel).append(L"\"");
+            formattedVolumeLabel.append(L"\"").append(volumeLabel).append(L"\"");
+        else
+        {
+            formattedVolumeLabel += L"-";
+            lenVolumeLabel = 1;
+        }
         formattedVolumeLabel.append(maxLenVolumeLabel - lenVolumeLabel, L' ');
 
         wprintf (L"%s ", formattedVolumeLabel.c_str());
@@ -144,14 +149,14 @@ class DriveInfo
         if (isVolInfoValid)
             wprintf (L" %04x-%04x  ", serialNumber >> 16, serialNumber & 0xffff);
         else
-            print (L"            ");
+            print (L" -          ");
 
         print (DriveDesc(driveType));
 
         if (isVolInfoValid)
             wprintf (L" [%s]  ", fileSysName);
         else
-            print (L"         ");
+            print (L" -       ");
 
         if (netMap)
             wprintf (L"--> %s", netMap);
