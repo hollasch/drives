@@ -21,8 +21,7 @@ using namespace std;
 #define PrintFileSysInfo  0
 
 
-static void     ExpandFileSysFlags (const wchar_t *prefix, DWORD flags);
-static wchar_t *DriveDesc (UINT type);
+static void ExpandFileSysFlags (const wchar_t *prefix, DWORD flags);
 
 const int NumPossibleDrives = 26;    // Number of Possible Drives
 
@@ -191,6 +190,27 @@ class DriveInfo
     }
 
   private:
+
+    static wchar_t *DriveDesc (UINT type)
+    {
+        //==============================================================================================
+        // Returns the string value for drive type values.
+        //==============================================================================================
+
+        switch (type)
+        {
+            case DRIVE_NO_ROOT_DIR:  return L"No root  ";
+            case DRIVE_REMOVABLE:    return L"Removable";
+            case DRIVE_FIXED:        return L"Fixed    ";
+            case DRIVE_REMOTE:       return L"Remote   ";
+            case DRIVE_CDROM:        return L"CD-ROM   ";
+            case DRIVE_RAMDISK:      return L"RAM Disk ";
+        }
+
+        return L"Unknown  ";
+    }
+
+
     wchar_t  drive[1 + sizeof L"X:\\"];        // Drive string with trailing slash (for example, 'X:\').
     wchar_t  driveNoSlash[1 + sizeof L"X:"];   // Drive string with no trailing slash ('X:').
     bool     isVolInfoValid;                   // True if we got the drive volume information.
@@ -291,24 +311,3 @@ static void ExpandFileSysFlags (const wchar_t *prefix, DWORD flags)
     return;
 }
 #endif
-
-
-
-static wchar_t *DriveDesc (UINT type)
-{
-    //==============================================================================================
-    // Returns the string value for drive type values.
-    //==============================================================================================
-
-    switch (type)
-    {
-        case DRIVE_UNKNOWN:      return L"Unknown  ";
-        case DRIVE_NO_ROOT_DIR:  return L"No root  ";
-        case DRIVE_REMOVABLE:    return L"Removable";
-        case DRIVE_FIXED:        return L"Fixed    ";
-        case DRIVE_REMOTE:       return L"Remote   ";
-        case DRIVE_CDROM:        return L"CD-ROM   ";
-        case DRIVE_RAMDISK:      return L"RAM Disk ";
-    }
-    return L"ERR{Unknown Drive Type}";
-}
