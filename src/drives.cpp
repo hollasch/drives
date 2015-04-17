@@ -298,6 +298,8 @@ class CommandOptions
     bool    printHelp;    // True => print help information
     wstring drive;        // Specified single drive, else null
 
+    static wchar_t* helpText;
+
     CommandOptions()
       : printHelp(false)
     {
@@ -367,10 +369,7 @@ class CommandOptions
 };
 
 
-
-//======================================================================================================================
-
-static wstring helpText =
+wchar_t* CommandOptions::helpText =
 L"\n"
 L"drives: Print drive and volume information.\n"
 L"Usage:  drives [/?|-h|--help]\n"
@@ -381,6 +380,11 @@ L"\n"
 L"-h      Print out help information\n"
 L"--help\n"
 ;
+
+
+
+//======================================================================================================================
+
 
 
 
@@ -397,7 +401,7 @@ int wmain (int argc, wchar_t* argv[])
 
     if (commandOptions.printHelp)
     {
-        wcout << helpText;
+        wcout << CommandOptions::helpText;
         exit(0);
     }
 
