@@ -14,6 +14,7 @@
 
 #include <string>
 #include <iostream>
+#include <iomanip>
 
 using namespace std;
 
@@ -23,13 +24,6 @@ using namespace std;
 
 
 const int NumPossibleDrives = 26;    // Number of Possible Drives
-
-
-static void print (wchar_t *string)
-{
-    // Simple string print helper function.
-    fputws (string, stdout);
-}
 
 
 
@@ -125,10 +119,11 @@ class DriveInfo
 
     void PrintVolumeInformation (size_t maxLenVolumeLabel)
     {
-        wprintf (L"%c: ", drive[0]);
+        wcout << drive[0] << L": ";
 
-        // Add room for quotes to volume label.
-        maxLenVolumeLabel += 2;
+        // Print the volume label.
+
+        maxLenVolumeLabel += 2;     // Add room for quotes to volume label.
         auto lenVolumeLabel = (volumeLabel[0] == 0) ? 0 : 2 + wcslen(volumeLabel);
 
         wstring formattedVolumeLabel;
@@ -142,24 +137,34 @@ class DriveInfo
         }
         formattedVolumeLabel.append(maxLenVolumeLabel - lenVolumeLabel, L' ');
 
-        wprintf (L"%s ", formattedVolumeLabel.c_str());
+        wcout << formattedVolumeLabel << L" ";
 
-        if (isVolInfoValid)
-            wprintf (L" %04x-%04x  ", serialNumber >> 16, serialNumber & 0xffff);
+        // Print the volume serial number.
+
+        if (!isVolInfoValid)
+            wcout << L" -          ";
         else
-            print (L" -          ");
+        {
+            wcout << hex << L' ';
+            wcout << setw(4) << setfill(L'0') << (serialNumber >> 16) << L'-';
+            wcout << setw(4) << setfill(L'0') << (serialNumber & 0xffff);
+            wcout << L"  " << dec;
+        }
 
-        print (DriveDesc(driveType));
+        // Drive Type
+        wcout << DriveDesc(driveType);
 
+        // File System Type
         if (isVolInfoValid)
-            wprintf (L" [%s]  ", fileSysName);
+            wcout << L" [" << fileSysName << L"]  ";
         else
-            print (L" -       ");
+            wcout << L" -       ";
 
+        // Mapping, if any.
         if (netMap)
-            wprintf (L"--> %s", netMap);
+            wcout << L"--> " << netMap;
 
-        print (L"\n");
+        wcout << endl;
 
         // Print the volume information.
         #if PrintFileSysInfo
@@ -302,7 +307,7 @@ class CommandOptions
             {
                 // Non switches
 
-                wprintf (L"%s: ERROR: Unexpected argument (%s).\n", programName, token);
+                wcerr << programName << L": ERROR: Unexpected argument (" << token << ").\n";
                 return false;
             }
             else if (0 == wcsncmp(token, L"--", wcslen(L"--")))
@@ -317,7 +322,7 @@ class CommandOptions
                 }
                 else
                 {
-                    wprintf (L"%s: ERROR: Unrecognized option (%s).\n", programName, token);
+                    wcerr << programName << L": ERROR: Unrecognized option (" << token << L").\n";
                     return false;
                 }
             }
@@ -327,7 +332,7 @@ class CommandOptions
 
                 if (!token[1])
                 {
-                    wprintf (L"%s: ERROR: Missing option letter for '%c'.\n", programName, token[0]);
+                    wcerr << programName << L": ERROR: Missing option letter for '" << token[0] << L"'.\n";
                     return false;
                 }
                 ++token;
@@ -339,7 +344,7 @@ class CommandOptions
                         break;
 
                     default:
-                        wprintf (L"%s: ERROR: Unrecognized option (%c).\n", programName, *token);
+                        wcerr << programName << L": ERROR: Unrecognized option (" << *token << L").\n";
                         return false;
 
                 } while (*++token);
@@ -367,12 +372,6 @@ L"--help\n"
 ;
 
 
-static void PrintHelp()
-{
-    wprintf(helpText);
-}
-
-
 
 //======================================================================================================================
 
@@ -387,7 +386,7 @@ int wmain (int argc, wchar_t* argv[])
 
     if (commandOptions.printHelp)
     {
-        PrintHelp();
+        cout << helpText;
         exit(0);
     }
 
