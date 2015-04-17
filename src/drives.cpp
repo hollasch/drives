@@ -54,8 +54,11 @@ class DriveInfo
 
     ~DriveInfo() { }
 
+
     void LoadVolumeInformation ()
     {
+        // Loads the volume information for this drive. Note that the drive letter was passed in at construction.
+
         driveType = GetDriveType (drive.c_str());
 
         wchar_t labelBuffer   [MAX_PATH + 1];   // Buffer for volume label
@@ -124,13 +127,22 @@ class DriveInfo
         delete[] netMapBuffer;
     }
 
+
     void GetMaxFieldLengths (size_t &maxLenVolumeLabel)
     {
+        // Computes the maximum field lengths, incorporating the length of this drive's fields.
+
         maxLenVolumeLabel = max (maxLenVolumeLabel, volumeLabel.length());
     }
 
+
     void PrintVolumeInformation (size_t maxLenVolumeLabel)
     {
+        // Prints human-readable volume information for this drive.
+        //
+        // maxLenVolumeLabel:  Maximum string length for all volume labels.
+
+
         wcout << driveNoSlash << L' ';
 
         // Print the volume label.
@@ -206,19 +218,95 @@ class DriveInfo
     }
 
 
+    void PrintParseableVolumeInformation()
+    {
+        // Prints the information for this volume in a machine-parseable format.
+
+        wcout << driveNoSlash << L"driveType: " << driveType << endl;
+
+        if (isVolInfoValid)
+        {
+            wcout << driveNoSlash << L"label: \"" << volumeLabel << L"\"" << endl;
+
+            wcout << driveNoSlash << L"serialNumber: \"" << hex;
+            wcout << setw(4) << setfill(L'0') << (serialNumber >> 16) << L'-';
+            wcout << setw(4) << setfill(L'0') << (serialNumber & 0xffff);
+            wcout << dec << L"\"" << endl;
+
+            wcout << driveNoSlash << L"maxComponentLength: " << maxComponentLength << endl;
+            wcout << driveNoSlash << L"fileSystem: \"" << fileSysName << "\"" << endl;
+            wcout << driveNoSlash << L"fileSysFlags: " <<hex <<setw(8) <<setfill(L'0') << fileSysFlags <<dec << endl;
+
+            auto flagPrint = [](DriveInfo* info, wstring desc, DWORD flag) {
+                wcout << info->driveNoSlash << desc << L": " << ((info->fileSysFlags & flag) != 0) << endl;
+            };
+
+            flagPrint (this, L"flagFileNamedStreams", FILE_NAMED_STREAMS);
+            flagPrint (this, L"flagFileSupportsObjectIDs", FILE_SUPPORTS_OBJECT_IDS);
+            flagPrint (this, L"flagFileSupportsReparsePoints", FILE_SUPPORTS_REPARSE_POINTS);
+            flagPrint (this, L"flagFileSupportsSparseFiles", FILE_SUPPORTS_SPARSE_FILES);
+            flagPrint (this, L"flagFileVolumeQuotas", FILE_VOLUME_QUOTAS);
+            flagPrint (this, L"flagFSCaseSensitive", FS_CASE_SENSITIVE);
+            flagPrint (this, L"flagFSFileCompression", FS_FILE_COMPRESSION);
+            flagPrint (this, L"flagFSFileEncryption", FS_FILE_ENCRYPTION);
+            flagPrint (this, L"flagFSUnicodeStoredOnDisk", FS_UNICODE_STORED_ON_DISK);
+            flagPrint (this, L"flagFSCaseIsPreserved", FS_CASE_IS_PRESERVED);
+            flagPrint (this, L"flagFSPersistentACLs", FS_PERSISTENT_ACLS);
+            flagPrint (this, L"flagFSVolIsCompressed", FS_VOL_IS_COMPRESSED);
+        }
+        else
+        {   wcout << driveNoSlash << L"label: null" << endl;
+            wcout << driveNoSlash << L"serialNumber: null" << endl;
+            wcout << driveNoSlash << L"maxComponentLength: null" << endl;
+            wcout << driveNoSlash << L"fileSystem: null" << endl;
+            wcout << driveNoSlash << L"fileSysFlags: null" << endl;
+            wcout << driveNoSlash << L"flagFileNamedStreams: null" << endl;
+            wcout << driveNoSlash << L"flagFileSupportsObjectIDs: null" << endl;
+            wcout << driveNoSlash << L"flagFileSupportsReparsePoints: null" << endl;
+            wcout << driveNoSlash << L"flagFileSupportsSparseFiles: null" << endl;
+            wcout << driveNoSlash << L"flagFileVolumeQuotas: null" << endl;
+            wcout << driveNoSlash << L"flagFSCaseSensitive: null" << endl;
+            wcout << driveNoSlash << L"flagFSFileCompression: null" << endl;
+            wcout << driveNoSlash << L"flagFSFileEncryption: null" << endl;
+            wcout << driveNoSlash << L"flagFSUnicodeStoredOnDisk: null" << endl;
+            wcout << driveNoSlash << L"flagFSCaseIsPreserved: null" << endl;
+            wcout << driveNoSlash << L"flagFSPersistentACLs: null" << endl;
+            wcout << driveNoSlash << L"flagFSVolIsCompressed: null" << endl;
+        }
+
+        wcout << driveNoSlash << L"name: \"" << volumeName << "\"" << endl;
+
+        wcout << driveNoSlash << L"netMap: ";
+        if (netMap.length())
+            wcout << "\"" << netMap << "\"" << endl;
+        else
+            wcout << "null" << endl;
+
+        wcout << driveNoSlash << L"subst: ";
+        if (subst.length())
+            wcout << "\"" << subst << "\"" << endl;
+        else
+            wcout << "null" << endl;
+    }
+
+
   private:
 
     wstring  drive;                 // Drive string with trailing slash (for example, 'X:\').
     wstring  driveNoSlash;          // Drive string with no trailing slash ('X:').
+    UINT     driveType;             // Type of drive volume
+
+    // Info from GetVolumeInformation
     bool     isVolInfoValid;        // True if we got the drive volume information.
     wstring  volumeLabel;           // Drive label
-    wstring  volumeName;            // Unique volume name
-    wstring  fileSysName;           // Name of volume file system
-    wstring  netMap;                // If applicable, the network map associated with the drive
     DWORD    serialNumber;          // Volume serial number
     DWORD    maxComponentLength;    // Maximum length for volume path components
     DWORD    fileSysFlags;          // Flags for volume file system
-    UINT     driveType;             // Type of drive volume
+    wstring  fileSysName;           // Name of volume file system
+
+    wstring  volumeName;            // Unique volume name
+    wstring  netMap;                // If applicable, the network map associated with the drive
+    wstring  subst;                 // Subst redirection
 
 
     static wstring DriveDesc (UINT type)
@@ -294,14 +382,16 @@ class CommandOptions
     // This class stores and manages all command line options.
 
   public:
-    wstring programName;  // Name of executable
-    bool    printHelp;    // True => print help information
-    wstring drive;        // Specified single drive, else null
+    wstring programName;     // Name of executable
+    bool    printHelp;       // True => print help information
+    bool    printParseable;  // True => print results in machine-parseable format
+    wstring drive;           // Specified single drive, else null
 
     static wchar_t* helpText;
 
     CommandOptions()
-      : printHelp(false)
+      : printHelp(false),
+        printParseable(false)
     {
     }
 
@@ -330,9 +420,9 @@ class CommandOptions
                 // Double-dash switches
 
                 if (tokenString == L"--help")
-                {
                     printHelp = true;
-                }
+                else if (tokenString == L"--parseable")
+                    printParseable = true;
                 else
                 {
                     wcerr << programName << L": ERROR: Unrecognized option (" << token << L").\n";
@@ -356,6 +446,10 @@ class CommandOptions
                         printHelp = true;
                         break;
 
+                    case L'p': case L'P':
+                        printParseable = true;
+                        break;
+
                     default:
                         wcerr << programName << L": ERROR: Unrecognized option (" << *token << L").\n";
                         return false;
@@ -372,19 +466,18 @@ class CommandOptions
 wchar_t* CommandOptions::helpText =
 L"\n"
 L"drives: Print drive and volume information.\n"
-L"Usage:  drives [/?|-h|--help]\n"
+L"Usage:  drives [/?|-h|--help] [-p|--parseable]\n"
 L"\n"
 L"Single letter options may use either dashes (-) or slashes (/) as option\n"
 L"prefixes, and are case insensitive.\n"
 L"\n"
-L"-h      Print out help information\n"
+L"-h            Print out help information.\n"
 L"--help\n"
+L"\n"
+L"-p            Print results in machine-parseable format.\n"
+L"--parseable\n"
+L"\n"
 ;
-
-
-
-//======================================================================================================================
-
 
 
 
@@ -430,7 +523,10 @@ int wmain (int argc, wchar_t* argv[])
         if (!DriveValid(logicalDrives, driveIndex))
             continue;
 
-        driveInfo[driveIndex]->PrintVolumeInformation(maxLenVolumeLabel);
+        if (commandOptions.printParseable)
+            driveInfo[driveIndex]->PrintParseableVolumeInformation();
+        else
+            driveInfo[driveIndex]->PrintVolumeInformation(maxLenVolumeLabel);
 
         delete driveInfo[driveIndex];
     }
