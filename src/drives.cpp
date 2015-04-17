@@ -221,7 +221,7 @@ class DriveInfo
     UINT     driveType;             // Type of drive volume
 
 
-    static wchar_t *DriveDesc (UINT type)
+    static wstring DriveDesc (UINT type)
     {
         // Returns the string value for drive type values.
 
@@ -294,13 +294,12 @@ class CommandOptions
     // This class stores and manages all command line options.
 
   public:
-    wchar_t*  programName;  // Name of executable
-    bool      printHelp;    // True => print help information
-    wchar_t** drive;        // Specified single drive, else null
+    wstring programName;  // Name of executable
+    bool    printHelp;    // True => print help information
+    wstring drive;        // Specified single drive, else null
 
     CommandOptions()
-      : printHelp(false),
-        drive(nullptr)
+      : printHelp(false)
     {
     }
 
@@ -371,7 +370,7 @@ class CommandOptions
 
 //======================================================================================================================
 
-static wchar_t helpText[] =
+static wstring helpText =
 L"\n"
 L"drives: Print drive and volume information.\n"
 L"Usage:  drives [/?|-h|--help]\n"
@@ -398,7 +397,7 @@ int wmain (int argc, wchar_t* argv[])
 
     if (commandOptions.printHelp)
     {
-        cout << helpText;
+        wcout << helpText;
         exit(0);
     }
 
