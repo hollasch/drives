@@ -13,6 +13,7 @@
 #include <windows.h>
 
 #include <string>
+#include <iostream>
 
 using namespace std;
 
@@ -22,6 +23,7 @@ using namespace std;
 
 
 static void ExpandFileSysFlags (const wchar_t *prefix, DWORD flags);
+
 
 const int NumPossibleDrives = 26;    // Number of Possible Drives
 
@@ -226,9 +228,124 @@ class DriveInfo
 
 //======================================================================================================================
 
-int main (int, char* [])
+class CommandOptions
+{
+    // This class stores and manages all command line options.
+
+  public:
+    wchar_t*  programName;  // Name of executable
+    bool      printHelp;    // True => print help information
+    wchar_t** drive;        // Specified single drive, else null
+
+    CommandOptions()
+      : printHelp(false),
+        drive(nullptr)
+    {
+    }
+
+
+    bool parseArguments (int argCount, wchar_t* argTokens[])
+    {
+        // Parse the command line into the individual command options.
+
+        programName = argTokens[0];
+
+        for (int argIndex = 1;  argIndex < argCount;  ++argIndex)
+        {
+            wchar_t* token = argTokens[argIndex];
+
+            if ((token[0] != L'/') && (token[0] != L'-'))
+            {
+                // Non switches
+
+                wprintf (L"%s: ERROR: Unexpected argument (%s).\n", programName, token);
+                return false;
+            }
+            else if (0 == wcsncmp(token, L"--", wcslen(L"--")))
+            {
+                wstring tokenString = token;
+                
+                // Double-dash switches
+
+                if (tokenString == L"--help")
+                {
+                    printHelp = true;
+                }
+                else
+                {
+                    wprintf (L"%s: ERROR: Unrecognized option (%s).\n", programName, token);
+                    return false;
+                }
+            }
+            else
+            {
+                // Single letter switches
+
+                if (!token[1])
+                {
+                    wprintf (L"%s: ERROR: Missing option letter for '%c'.\n", programName, token[0]);
+                    return false;
+                }
+                ++token;
+
+                do switch(*token)
+                {
+                    case L'h': case L'H': case L'?':
+                        printHelp = true;
+                        break;
+
+                    default:
+                        wprintf (L"%s: ERROR: Unrecognized option (%c).\n", programName, *token);
+                        return false;
+
+                } while (*++token);
+            }
+        }
+
+        return true;
+    }
+};
+
+
+
+//======================================================================================================================
+
+static wchar_t helpText[] =
+L"\n"
+L"drives: Print drive and volume information.\n"
+L"Usage:  drives [/?|-h|--help]\n"
+L"\n"
+L"Single letter options may use either dashes (-) or slashes (/) as option\n"
+L"prefixes, and are case insensitive.\n"
+L"\n"
+L"-h      Print out help information\n"
+L"--help\n"
+;
+
+
+static void PrintHelp()
+{
+    wprintf(helpText);
+}
+
+
+
+//======================================================================================================================
+
+int wmain (int argc, wchar_t* argv[])
 {
     // Main Program Entry Point
+
+    CommandOptions commandOptions;
+
+    if (!commandOptions.parseArguments(argc, argv))
+        exit(1);
+
+    if (commandOptions.printHelp)
+    {
+        PrintHelp();
+        exit(0);
+    }
 
     DWORD logicalDrives = GetLogicalDrives();
 
