@@ -407,12 +407,14 @@ class CommandOptions
                 // Non switches
 
                 // Allowable drive formats: 'X', 'X:.*'.
-                const bool driveLetterInRange   = (L'A' <= token[0]) && (token[0] <= L'Z');
+
+                const bool driveLetterInRange =  ((L'A' <= token[0]) && (token[0] <= L'Z'))
+                                              || ((L'a' <= token[0]) && (token[0] <= L'z'));
                 const bool driveStringTailValid = (token[1] == 0) || (token[1] == L':');
 
                 if (driveLetterInRange && driveStringTailValid)
                 {
-                    singleDriveIndex = token[0] - L'A';
+                    singleDriveIndex = towupper(token[0]) - L'A';
                 }
                 else
                 {
