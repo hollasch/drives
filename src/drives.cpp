@@ -18,17 +18,13 @@
 
 using namespace std;
 
-// Program Parameters
-
-#define PrintFileSysInfo  0
-
-
 const int NumPossibleDrives = 26;    // Number of Possible Drives
 
 
 
 bool DriveValid (DWORD logicalDrives, unsigned short driveIndex)
 {
+    // Returns true if the logical drive index is valid.
     return 0 != (logicalDrives & (1 << driveIndex));
 }
 
@@ -192,32 +188,6 @@ class DriveInfo
             wcout << L"--> " << netMap;
 
         wcout << endl;
-
-        // Print the volume information.
-        #if PrintFileSysInfo
-        {
-            if (isVolInfoValid)
-            {
-                wprintf (L"    Max Component Len = %d, FSys Flags = 0x%08x\n\n", maxComponentLength, fileSysFlags);
-                ExpandFileSysFlags (L"    ", fileSysFlags);
-            }
-        }
-        #endif
-
-        /*
-        wprintf(L"// Drive \"%s\" / \"%s\":\n"
-                L"    infoValid: %s,\n"
-                L"    label: \"%s\",\n"
-                L"    name: \"%s\",\n"
-                L"    fileSysName: \"%s\",\n"
-                L"    netMap: \"%s\",\n"
-                L"    serialNumber: %016x,\n"
-                L"    maxComponentLength: %d,\n"
-                L"    fileSysFlags: %016x,\n"
-                L"    driveType: %016x\n",
-            drive, driveNoSlash, isVolInfoValid ? L"true" : L"false", volumeLabel, volumeName, fileSysName,
-            netMap ? netMap : L"<null>", serialNumber, maxComponentLength, fileSysFlags, driveType);
-        */
     }
 
 
@@ -328,52 +298,6 @@ class DriveInfo
 
         return L"Unknown";
     }
-
-
-    #if PrintFileSysInfo
-        static void ExpandFileSysFlags (const wchar_t *prefix, DWORD flags)
-        {
-            // Prints detailed information from the file system flags.
-
-            wprintf (L"%s%s:  Supports named streams\n",
-                prefix, (flags & FILE_NAMED_STREAMS) ? L"Yes" : L"No ");
-
-            wprintf (L"%s%s:  Supports object identifiers\n",
-                prefix, (flags & FILE_SUPPORTS_OBJECT_IDS) ? L"Yes" : L"No ");
-
-            wprintf (L"%s%s:  Supports re-parse points\n",
-                prefix, (flags & FILE_SUPPORTS_REPARSE_POINTS) ? L"Yes" : L"No ");
-
-            wprintf (L"%s%s:  Supports sparse files\n",
-                prefix, (flags & FILE_SUPPORTS_SPARSE_FILES) ? L"Yes" : L"No ");
-
-            wprintf (L"%s%s:  Supports disk quotas\n",
-                prefix, (flags & FILE_VOLUME_QUOTAS) ? L"Yes" : L"No ");
-
-            wprintf (L"%s%s:  Supports case-sensitive file names\n",
-                prefix, (flags & FS_CASE_SENSITIVE) ? L"Yes" : L"No ");
-
-            wprintf (L"%s%s:  Supports file-based compression\n",
-                prefix, (flags & FS_FILE_COMPRESSION) ? L"Yes" : L"No ");
-
-            wprintf (L"%s%s:  Supports Encrypted File System (EFS)\n",
-                prefix, (flags & FS_FILE_ENCRYPTION) ? L"Yes" : L"No ");
-
-            wprintf (L"%s%s:  Supports Unicode file names\n",
-                prefix, (flags & FS_UNICODE_STORED_ON_DISK) ? L"Yes" : L"No ");
-
-            wprintf (L"%s%s:  Preserves file name case\n",
-                prefix, (flags & FS_CASE_IS_PRESERVED) ? L"Yes" : L"No ");
-
-            wprintf (L"%s%s:  Preserves and enforces access control lists (ACLs)\n",
-                prefix, (flags & FS_PERSISTENT_ACLS) ? L"Yes" : L"No ");
-
-            wprintf (L"%s%s:  Volume is compressed\n",
-                prefix, (flags & FS_VOL_IS_COMPRESSED) ? L"Yes" : L"No ");
-
-            return;
-        }
-    #endif
 };
 
 
