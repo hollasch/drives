@@ -133,11 +133,13 @@ class DriveInfo
     }
 
 
-    void PrintVolumeInformation (size_t maxLenVolumeLabel, size_t maxLenDriveDesc)
+    void PrintVolumeInformation (bool verbose, size_t maxLenVolumeLabel, size_t maxLenDriveDesc)
     {
         // Prints human-readable volume information for this drive.
         //
+        // verbose:            True => print additional volume information.
         // maxLenVolumeLabel:  Maximum string length for all volume labels.
+        // maxLenDriveDesc:    Maximum string length for all drive type strings.
 
 
         wcout << driveNoSlash << L' ';
@@ -186,6 +188,13 @@ class DriveInfo
         // Mapping, if any.
         if (netMap.length())
             wcout << L"--> " << netMap;
+
+        // Print additional information if requested.
+        if (verbose)
+        {
+            if (volumeName.length())
+                wcout << endl << L"   " << volumeName << endl;
+        }
 
         wcout << endl;
     }
@@ -312,13 +321,15 @@ class CommandOptions
     wstring programName;     // Name of executable
     bool    printVersion;    // True => Print program version
     bool    printHelp;       // True => print help information
+    bool    printVerbose;    // True => Print verbose; include additional information
     bool    printParseable;  // True => print results in machine-parseable format
     wstring drive;           // Specified single drive, else null
 
     static wchar_t* helpText;
 
     CommandOptions()
-      : printVersion(false),
+      : printVerbose(false),
+        printVersion(false),
         printHelp(false),
         printParseable(false)
     {
@@ -352,6 +363,8 @@ class CommandOptions
                     printHelp = true;
                 else if (tokenString == L"--parseable")
                     printParseable = true;
+                else if (tokenString == L"--verbose")
+                    printVerbose = true;
                 else if (tokenString == L"--version")
                     printVersion = true;
                 else
@@ -382,7 +395,7 @@ class CommandOptions
                         break;
 
                     case L'v': case L'V':
-                        printVersion = true;
+                        printVerbose = true;
                         break;
 
                     default:
@@ -393,27 +406,28 @@ class CommandOptions
             }
         }
 
+        printVersion = printVersion || printHelp;
+
         return true;
     }
 };
 
 
 wchar_t* CommandOptions::helpText =
-L"\n"
 L"drives: Print drive and volume information.\n"
-L"Usage:  drives [/?|-h|--help] [-v|--version] [-p|--parseable]\n"
+L"Usage:  drives [/?|-h|--help] [--version] [-v|--verbose] [-p|--parseable]\n"
 L"\n"
 L"Single letter options may use either dashes (-) or slashes (/) as option\n"
 L"prefixes, and are case insensitive.\n"
 L"\n"
-L"-h            Print help information.\n"
-L"--help\n"
+L"--help / -h       Print help information.\n"
 L"\n"
-L"-v            Print program version.\n"
-L"--version\n"
+L"--verbose / -v    Print verbose; print additional information (only affects\n"
+L"                  human format).\n"
 L"\n"
-L"-p            Print results in machine-parseable format.\n"
-L"--parseable\n"
+L"--version         Print program version.\n"
+L"\n"
+L"--parseable / -p  Print results in machine-parseable format.\n"
 L"\n"
 ;
 
@@ -430,25 +444,23 @@ int wmain (int argc, wchar_t* argv[])
     if (!commandOptions.parseArguments(argc, argv))
         exit(1);
 
-    if (commandOptions.printHelp)
-    {
-        wcout << CommandOptions::helpText;
-        exit(0);
-    }
-
     if (commandOptions.printVersion)
     {
         wcout << "drives " << programVersion << endl;
+
+        if (commandOptions.printHelp)
+            wcout << CommandOptions::helpText;
+
         exit(0);
     }
 
-    DWORD logicalDrives = GetLogicalDrives();
-
-    DriveInfo* driveInfo [NumPossibleDrives];
+    DWORD logicalDrives = GetLogicalDrives();     // Query system logical drives.
+    DriveInfo* driveInfo [NumPossibleDrives];     // Create drive info for each possible drive.
 
     // Query all drives for volume information, and get maximum field lengths.
-    unsigned short driveIndex;
-    wchar_t        driveLetter;
+
+    unsigned short driveIndex;    // Drive numerical index, [0,26).
+    wchar_t        driveLetter;   // Iterating drive letter.
 
     size_t maxLenVolumeLabel = 0;
     size_t maxLenDriveDesc = 0;
@@ -463,6 +475,8 @@ int wmain (int argc, wchar_t* argv[])
         driveInfo[driveIndex]->GetMaxFieldLengths(maxLenVolumeLabel, maxLenDriveDesc);
     }
 
+    // For each drive, print volume information.
+
     for (driveIndex = 0, driveLetter = L'A';  driveIndex < NumPossibleDrives;  ++driveIndex, ++driveLetter)
     {
         if (!DriveValid(logicalDrives, driveIndex))
@@ -471,7 +485,8 @@ int wmain (int argc, wchar_t* argv[])
         if (commandOptions.printParseable)
             driveInfo[driveIndex]->PrintParseableVolumeInformation();
         else
-            driveInfo[driveIndex]->PrintVolumeInformation(maxLenVolumeLabel, maxLenDriveDesc);
+            driveInfo[driveIndex]->
+                PrintVolumeInformation(commandOptions.printVerbose, maxLenVolumeLabel, maxLenDriveDesc);
 
         delete driveInfo[driveIndex];
     }
