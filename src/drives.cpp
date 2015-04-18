@@ -36,7 +36,7 @@ class DriveInfo
     // This class contains the information for a single drive.
 
   public:
-    DriveInfo (wchar_t driveLetter)
+    DriveInfo (unsigned short driveIndex /* in [0,26) */)
       : drive(L"_:\\"),
         driveNoSlash(L"_:"),
         isVolInfoValid(false),
@@ -44,8 +44,7 @@ class DriveInfo
         maxComponentLength(0),
         fileSysFlags(0)
     {
-        drive[0]        = driveLetter;
-        driveNoSlash[0] = driveLetter;
+        drive[0] = driveNoSlash[0] = L'A' + driveIndex;
     }
 
     ~DriveInfo() { }
@@ -460,24 +459,23 @@ int wmain (int argc, wchar_t* argv[])
     // Query all drives for volume information, and get maximum field lengths.
 
     unsigned short driveIndex;    // Drive numerical index, [0,26).
-    wchar_t        driveLetter;   // Iterating drive letter.
 
     size_t maxLenVolumeLabel = 0;
     size_t maxLenDriveDesc = 0;
 
-    for (driveIndex = 0, driveLetter = L'A';  driveIndex < NumPossibleDrives;  ++driveIndex, ++driveLetter)
+    for (driveIndex = 0;  driveIndex < NumPossibleDrives;  ++driveIndex)
     {
         if (!DriveValid(logicalDrives, driveIndex))
             continue;
 
-        driveInfo[driveIndex] = new DriveInfo(driveLetter);
+        driveInfo[driveIndex] = new DriveInfo(driveIndex);
         driveInfo[driveIndex]->LoadVolumeInformation();
         driveInfo[driveIndex]->GetMaxFieldLengths(maxLenVolumeLabel, maxLenDriveDesc);
     }
 
     // For each drive, print volume information.
 
-    for (driveIndex = 0, driveLetter = L'A';  driveIndex < NumPossibleDrives;  ++driveIndex, ++driveLetter)
+    for (driveIndex = 0;  driveIndex < NumPossibleDrives;  ++driveIndex)
     {
         if (!DriveValid(logicalDrives, driveIndex))
             continue;
