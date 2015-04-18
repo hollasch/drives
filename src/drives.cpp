@@ -41,8 +41,7 @@ class DriveInfo
         isVolInfoValid(false),
         serialNumber(0),
         maxComponentLength(0),
-        fileSysFlags(0),
-        driveType(DRIVE_UNKNOWN)
+        fileSysFlags(0)
     {
         drive[0]        = driveLetter;
         driveNoSlash[0] = driveLetter;
@@ -55,7 +54,7 @@ class DriveInfo
     {
         // Loads the volume information for this drive. Note that the drive letter was passed in at construction.
 
-        driveType = GetDriveType (drive.c_str());
+        driveDesc = DriveDesc (GetDriveType (drive.c_str()));
 
         wchar_t labelBuffer   [MAX_PATH + 1];   // Buffer for volume label
         wchar_t fileSysBuffer [MAX_PATH + 1];   // Buffer for file system name
@@ -129,7 +128,7 @@ class DriveInfo
         // Computes the maximum field lengths, incorporating the length of this drive's fields.
 
         maxLenVolumeLabel = max (maxLenVolumeLabel, volumeLabel.length());
-        maxLenDriveDesc   = max (maxLenDriveDesc, DriveDesc(driveType).length());
+        maxLenDriveDesc   = max (maxLenDriveDesc,   driveDesc.length());
     }
 
 
@@ -173,9 +172,9 @@ class DriveInfo
         }
 
         // Drive Type
-        wstring driveDesc = DriveDesc(driveType);
-        driveDesc.append (maxLenDriveDesc - driveDesc.length(), L' ');
-        wcout << driveDesc;
+        wstring driveDescPadded = driveDesc;
+        driveDescPadded.append (maxLenDriveDesc - driveDesc.length(), L' ');
+        wcout << driveDescPadded;
 
         // File System Type
         if (isVolInfoValid)
@@ -195,7 +194,7 @@ class DriveInfo
     {
         // Prints the information for this volume in a machine-parseable format.
 
-        wcout << driveNoSlash << L"driveType: \"" << DriveDesc(driveType) << L"\"" << endl;
+        wcout << driveNoSlash << L"driveType: \"" << driveDesc << L"\"" << endl;
 
         if (isVolInfoValid)
         {
@@ -267,7 +266,7 @@ class DriveInfo
 
     wstring  drive;                 // Drive string with trailing slash (for example, 'X:\').
     wstring  driveNoSlash;          // Drive string with no trailing slash ('X:').
-    UINT     driveType;             // Type of drive volume
+    wstring  driveDesc;             // Type of drive volume
 
     // Info from GetVolumeInformation
     bool     isVolInfoValid;        // True if we got the drive volume information.
