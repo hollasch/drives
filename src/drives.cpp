@@ -38,8 +38,9 @@ class DriveInfo
     // This class contains the information for a single drive.
 
   public:
-    DriveInfo (unsigned short driveIndex /* in [0,26) */)
-      : drive(L"_:\\"),
+    DriveInfo (unsigned short _driveIndex /* in [0,26) */)
+      : driveIndex(_driveIndex),
+        drive(L"_:\\"),
         driveNoSlash(L"_:"),
         isVolInfoValid(false),
         serialNumber(0),
@@ -52,7 +53,7 @@ class DriveInfo
     ~DriveInfo() { }
 
 
-    void LoadVolumeInformation ()
+    void LoadVolumeInformation (wstring programName, wstring driveSubstitutions[NumPossibleDrives])
     {
         // Loads the volume information for this drive. Note that the drive letter was passed in at construction.
 
@@ -86,6 +87,54 @@ class DriveInfo
         else
             volumeName.clear();
 
+        subst = driveSubstitutions[driveIndex];
+
+        GetNetworkMap();
+    }
+
+
+    static void GetDriveSubstitutions (wstring programName, wstring (&substitutions)[NumPossibleDrives])
+    {
+        // Get information on any substitutions for this drive.
+
+        // Execute the 'subst' command to scrape existing drive substitutions.
+        FILE *results = _wpopen (L"subst", L"rt");
+        if (!results)
+        {   wcerr << programName << L": ERROR: 'subst' command failed." << endl;
+            return;
+        }
+
+        // Parse the output line-by-line to get each substitution.
+        wchar_t buffer[4096];
+
+        while (!feof(results))
+        {
+            if (fgetws (buffer, sizeof(buffer), results) == NULL)
+                continue;
+
+            // Scan past the "X:\ => " leader.
+            wchar_t *ptr = buffer;
+            while (*ptr && *ptr != L'>')
+                ++ptr;
+
+            if (*++ptr != L' ') continue;
+            ++ptr;
+
+            // Trim the trailing end-of-line characters.
+            wstring sub = ptr;
+            sub.erase (sub.find_last_not_of(L" \n\r\t") + 1);
+
+            // Save off the substitution target.
+            unsigned short driveIndex = buffer[0] - L'A';
+            substitutions[driveIndex] = sub;
+        }
+
+        _pclose(results);
+    }
+
+
+    void GetNetworkMap()
+    {
         // Get the network-mapped connection, if any.
 
         DWORD netMapBufferSize = MAX_PATH + 1;
@@ -186,6 +235,10 @@ class DriveInfo
         else
             wcout << L" -      ";
 
+        // Drive substitution, if any.
+        if (subst.length())
+            wcout << L"--> " << subst;
+
         // Mapping, if any.
         if (netMap.length())
             wcout << L"--> " << netMap;
@@ -259,22 +312,23 @@ class DriveInfo
 
         wcout << driveNoSlash << L"name: \"" << volumeName << "\"" << endl;
 
-        wcout << driveNoSlash << L"netMap: ";
-        if (netMap.length())
-            wcout << "\"" << netMap << "\"" << endl;
-        else
+        wcout << driveNoSlash << L"driveSubst: ";
+        if (!subst.length())
             wcout << "null" << endl;
-
-        wcout << driveNoSlash << L"subst: ";
-        if (subst.length())
+        else
             wcout << "\"" << subst << "\"" << endl;
-        else
+
+        wcout << driveNoSlash << L"netMap: ";
+        if (!netMap.length())
             wcout << "null" << endl;
+        else
+            wcout << "\"" << netMap << "\"" << endl;
     }
 
 
   private:
 
+    unsigned short driveIndex;      // Logical drive index 0=A, 1=B, ..., 25=Z.
     wstring  drive;                 // Drive string with trailing slash (for example, 'X:\').
     wstring  driveNoSlash;          // Drive string with no trailing slash ('X:').
     wstring  driveDesc;             // Type of drive volume
@@ -454,6 +508,8 @@ int wmain (int argc, wchar_t* argv[])
 {
     // Main Program Entry Point
 
+    // Parse command line options.
+
     CommandOptions commandOptions;
 
     if (!commandOptions.parseArguments(argc, argv))
@@ -469,11 +525,16 @@ int wmain (int argc, wchar_t* argv[])
         exit(0);
     }
 
-    DWORD logicalDrives = GetLogicalDrives();     // Query system logical drives.
-    DriveInfo* driveInfo [NumPossibleDrives];     // Create drive info for each possible drive.
+    DWORD logicalDrives = GetLogicalDrives();        // Query system logical drives.
+    DriveInfo* driveInfo [NumPossibleDrives];        // Create drive info for each possible drive.
+    wstring driveSubstitutions[NumPossibleDrives];   // Drive Substituttions
+
+    DriveInfo::GetDriveSubstitutions (commandOptions.programName, driveSubstitutions);
 
     unsigned short minDriveIndex = 0;
     unsigned short maxDriveIndex = NumPossibleDrives - 1;
+
+    // Handle single-drive reporting.
 
     if (commandOptions.singleDriveIndex != DriveIndexNone)
     {
@@ -498,7 +559,7 @@ int wmain (int argc, wchar_t* argv[])
             continue;
 
         driveInfo[driveIndex] = new DriveInfo(driveIndex);
-        driveInfo[driveIndex]->LoadVolumeInformation();
+        driveInfo[driveIndex]->LoadVolumeInformation (commandOptions.programName, driveSubstitutions);
         driveInfo[driveIndex]->GetMaxFieldLengths(maxLenVolumeLabel, maxLenDriveDesc);
     }
 
