@@ -18,8 +18,10 @@
 
 using namespace std;
 
-const auto programVersion    = L"0.9.1+";   // Program Version. '###+' prefix denotes modifications from version ###.
-const int  NumPossibleDrives = 26;          // Number of Possible Drives
+const auto programVersion = L"0.9.1+";   // Program Version. '###+' prefix denotes modifications from version ###.
+
+const unsigned short NumPossibleDrives = 26; // Number of Possible Drives
+const unsigned short DriveIndexNone = 99;    // Drive Index for None/Null/Invalid Drive
 
 
 
@@ -317,12 +319,12 @@ class CommandOptions
     // This class stores and manages all command line options.
 
   public:
-    wstring programName;     // Name of executable
-    bool    printVersion;    // True => Print program version
-    bool    printHelp;       // True => print help information
-    bool    printVerbose;    // True => Print verbose; include additional information
-    bool    printParseable;  // True => print results in machine-parseable format
-    wstring drive;           // Specified single drive, else null
+    wstring        programName;       // Name of executable
+    bool           printVersion;      // True => Print program version
+    bool           printHelp;         // True => print help information
+    bool           printVerbose;      // True => Print verbose; include additional information
+    bool           printParseable;    // True => print results in machine-parseable format
+    unsigned short singleDriveIndex;  // Specified single drive, else null
 
     static wchar_t* helpText;
 
@@ -330,7 +332,8 @@ class CommandOptions
       : printVerbose(false),
         printVersion(false),
         printHelp(false),
-        printParseable(false)
+        printParseable(false),
+        singleDriveIndex(DriveIndexNone)
     {
     }
 
@@ -349,8 +352,19 @@ class CommandOptions
             {
                 // Non switches
 
-                wcerr << programName << L": ERROR: Unexpected argument (" << token << ").\n";
-                return false;
+                // Allowable drive formats: 'X', 'X:.*'.
+                const bool driveLetterInRange   = (L'A' <= token[0]) && (token[0] <= L'Z');
+                const bool driveStringTailValid = (token[1] == 0) || (token[1] == L':');
+
+                if (driveLetterInRange && driveStringTailValid)
+                {
+                    singleDriveIndex = token[0] - L'A';
+                }
+                else
+                {
+                    wcerr << programName << L": ERROR: Unexpected argument (" << token << ").\n";
+                    return false;
+                }
             }
             else if (0 == wcsncmp(token, L"--", wcslen(L"--")))
             {
@@ -414,7 +428,7 @@ class CommandOptions
 
 wchar_t* CommandOptions::helpText =
 L"drives: Print drive and volume information.\n"
-L"Usage:  drives [/?|-h|--help] [--version] [-v|--verbose] [-p|--parseable]\n"
+L"Usage:  drives [/?|-h|--help] [--version] [-v|--verbose] [-p|--parseable] [drive]\n"
 L"\n"
 L"Single letter options may use either dashes (-) or slashes (/) as option\n"
 L"prefixes, and are case insensitive.\n"
@@ -427,6 +441,8 @@ L"\n"
 L"--version         Print program version.\n"
 L"\n"
 L"--parseable / -p  Print results in machine-parseable format.\n"
+L"\n"
+L"[drive]           Drive letter for single drive report.\n"
 L"\n"
 ;
 
@@ -456,6 +472,19 @@ int wmain (int argc, wchar_t* argv[])
     DWORD logicalDrives = GetLogicalDrives();     // Query system logical drives.
     DriveInfo* driveInfo [NumPossibleDrives];     // Create drive info for each possible drive.
 
+    unsigned short minDriveIndex = 0;
+    unsigned short maxDriveIndex = NumPossibleDrives - 1;
+
+    if (commandOptions.singleDriveIndex != DriveIndexNone)
+    {
+        if (!DriveValid(logicalDrives, commandOptions.singleDriveIndex))
+        {   wchar_t driveLetter = L'A' + commandOptions.singleDriveIndex;
+            wcout << commandOptions.programName << L": No volume present at drive " << driveLetter << L":." << endl;
+            exit(1);
+        }
+        minDriveIndex = maxDriveIndex = commandOptions.singleDriveIndex;
+    }
+
     // Query all drives for volume information, and get maximum field lengths.
 
     unsigned short driveIndex;    // Drive numerical index, [0,26).
@@ -463,7 +492,7 @@ int wmain (int argc, wchar_t* argv[])
     size_t maxLenVolumeLabel = 0;
     size_t maxLenDriveDesc = 0;
 
-    for (driveIndex = 0;  driveIndex < NumPossibleDrives;  ++driveIndex)
+    for (driveIndex = minDriveIndex;  driveIndex <= maxDriveIndex;  ++driveIndex)
     {
         if (!DriveValid(logicalDrives, driveIndex))
             continue;
@@ -475,7 +504,7 @@ int wmain (int argc, wchar_t* argv[])
 
     // For each drive, print volume information.
 
-    for (driveIndex = 0;  driveIndex < NumPossibleDrives;  ++driveIndex)
+    for (driveIndex = minDriveIndex;  driveIndex <= maxDriveIndex;  ++driveIndex)
     {
         if (!DriveValid(logicalDrives, driveIndex))
             continue;
