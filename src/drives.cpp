@@ -18,7 +18,8 @@
 
 using namespace std;
 
-const int NumPossibleDrives = 26;    // Number of Possible Drives
+const auto programVersion    = L"0.9.1+";   // Program Version. '###+' prefix denotes modifications from version ###.
+const int  NumPossibleDrives = 26;          // Number of Possible Drives
 
 
 
@@ -309,6 +310,7 @@ class CommandOptions
 
   public:
     wstring programName;     // Name of executable
+    bool    printVersion;    // True => Print program version
     bool    printHelp;       // True => print help information
     bool    printParseable;  // True => print results in machine-parseable format
     wstring drive;           // Specified single drive, else null
@@ -316,7 +318,8 @@ class CommandOptions
     static wchar_t* helpText;
 
     CommandOptions()
-      : printHelp(false),
+      : printVersion(false),
+        printHelp(false),
         printParseable(false)
     {
     }
@@ -349,6 +352,8 @@ class CommandOptions
                     printHelp = true;
                 else if (tokenString == L"--parseable")
                     printParseable = true;
+                else if (tokenString == L"--version")
+                    printVersion = true;
                 else
                 {
                     wcerr << programName << L": ERROR: Unrecognized option (" << token << L").\n";
@@ -376,6 +381,10 @@ class CommandOptions
                         printParseable = true;
                         break;
 
+                    case L'v': case L'V':
+                        printVersion = true;
+                        break;
+
                     default:
                         wcerr << programName << L": ERROR: Unrecognized option (" << *token << L").\n";
                         return false;
@@ -392,13 +401,16 @@ class CommandOptions
 wchar_t* CommandOptions::helpText =
 L"\n"
 L"drives: Print drive and volume information.\n"
-L"Usage:  drives [/?|-h|--help] [-p|--parseable]\n"
+L"Usage:  drives [/?|-h|--help] [-v|--version] [-p|--parseable]\n"
 L"\n"
 L"Single letter options may use either dashes (-) or slashes (/) as option\n"
 L"prefixes, and are case insensitive.\n"
 L"\n"
-L"-h            Print out help information.\n"
+L"-h            Print help information.\n"
 L"--help\n"
+L"\n"
+L"-v            Print program version.\n"
+L"--version\n"
 L"\n"
 L"-p            Print results in machine-parseable format.\n"
 L"--parseable\n"
@@ -421,6 +433,12 @@ int wmain (int argc, wchar_t* argv[])
     if (commandOptions.printHelp)
     {
         wcout << CommandOptions::helpText;
+        exit(0);
+    }
+
+    if (commandOptions.printVersion)
+    {
+        wcout << "drives " << programVersion << endl;
         exit(0);
     }
 
