@@ -128,15 +128,16 @@ class DriveInfo
     }
 
 
-    void GetMaxFieldLengths (size_t &maxLenVolumeLabel)
+    void GetMaxFieldLengths (size_t &maxLenVolumeLabel, size_t &maxLenDriveDesc)
     {
         // Computes the maximum field lengths, incorporating the length of this drive's fields.
 
         maxLenVolumeLabel = max (maxLenVolumeLabel, volumeLabel.length());
+        maxLenDriveDesc   = max (maxLenDriveDesc, DriveDesc(driveType).length());
     }
 
 
-    void PrintVolumeInformation (size_t maxLenVolumeLabel)
+    void PrintVolumeInformation (size_t maxLenVolumeLabel, size_t maxLenDriveDesc)
     {
         // Prints human-readable volume information for this drive.
         //
@@ -176,13 +177,15 @@ class DriveInfo
         }
 
         // Drive Type
-        wcout << DriveDesc(driveType);
+        wstring driveDesc = DriveDesc(driveType);
+        driveDesc.append (maxLenDriveDesc - driveDesc.length(), L' ');
+        wcout << driveDesc;
 
         // File System Type
         if (isVolInfoValid)
-            wcout << L" [" << fileSysName << L"]  ";
+            wcout << L" [" << fileSysName << L"] ";
         else
-            wcout << L" -       ";
+            wcout << L" -      ";
 
         // Mapping, if any.
         if (netMap.length())
@@ -222,7 +225,7 @@ class DriveInfo
     {
         // Prints the information for this volume in a machine-parseable format.
 
-        wcout << driveNoSlash << L"driveType: " << driveType << endl;
+        wcout << driveNoSlash << L"driveType: \"" << DriveDesc(driveType) << L"\"" << endl;
 
         if (isVolInfoValid)
         {
@@ -315,15 +318,15 @@ class DriveInfo
 
         switch (type)
         {
-            case DRIVE_NO_ROOT_DIR:  return L"No root  ";
+            case DRIVE_NO_ROOT_DIR:  return L"No root";
             case DRIVE_REMOVABLE:    return L"Removable";
-            case DRIVE_FIXED:        return L"Fixed    ";
-            case DRIVE_REMOTE:       return L"Remote   ";
-            case DRIVE_CDROM:        return L"CD-ROM   ";
-            case DRIVE_RAMDISK:      return L"RAM Disk ";
+            case DRIVE_FIXED:        return L"Fixed";
+            case DRIVE_REMOTE:       return L"Remote";
+            case DRIVE_CDROM:        return L"CD-ROM";
+            case DRIVE_RAMDISK:      return L"RAM Disk";
         }
 
-        return L"Unknown  ";
+        return L"Unknown";
     }
 
 
@@ -507,6 +510,7 @@ int wmain (int argc, wchar_t* argv[])
     wchar_t        driveLetter;
 
     size_t maxLenVolumeLabel = 0;
+    size_t maxLenDriveDesc = 0;
 
     for (driveIndex = 0, driveLetter = L'A';  driveIndex < NumPossibleDrives;  ++driveIndex, ++driveLetter)
     {
@@ -515,7 +519,7 @@ int wmain (int argc, wchar_t* argv[])
 
         driveInfo[driveIndex] = new DriveInfo(driveLetter);
         driveInfo[driveIndex]->LoadVolumeInformation();
-        driveInfo[driveIndex]->GetMaxFieldLengths(maxLenVolumeLabel);
+        driveInfo[driveIndex]->GetMaxFieldLengths(maxLenVolumeLabel, maxLenDriveDesc);
     }
 
     for (driveIndex = 0, driveLetter = L'A';  driveIndex < NumPossibleDrives;  ++driveIndex, ++driveLetter)
@@ -526,7 +530,7 @@ int wmain (int argc, wchar_t* argv[])
         if (commandOptions.printParseable)
             driveInfo[driveIndex]->PrintParseableVolumeInformation();
         else
-            driveInfo[driveIndex]->PrintVolumeInformation(maxLenVolumeLabel);
+            driveInfo[driveIndex]->PrintVolumeInformation(maxLenVolumeLabel, maxLenDriveDesc);
 
         delete driveInfo[driveIndex];
     }
