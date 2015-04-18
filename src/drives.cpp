@@ -2,7 +2,8 @@
 //
 //  drives
 //
-//  Experimental program to print out volume information about all drives.
+//  Command-line tool to print out volume information about all drives. See "::helpText" below for
+//  usage information.
 //
 //==================================================================================================
 
@@ -18,7 +19,7 @@
 
 using namespace std;
 
-const auto programVersion = L"0.9.1+";   // Program Version. '###+' prefix denotes modifications from version ###.
+const auto programVersion = L"1.0";   // Program Version. '###+' prefix denotes interim modifications from version ###.
 
 const unsigned short NumPossibleDrives = 26; // Number of Possible Drives
 const unsigned short DriveIndexNone = 99;    // Drive Index for None/Null/Invalid Drive
@@ -484,10 +485,12 @@ class CommandOptions
 
 wchar_t* CommandOptions::helpText =
 L"drives: Print drive and volume information.\n"
-L"Usage:  drives [/?|-h|--help] [--version] [-v|--verbose] [-p|--parseable] [drive]\n"
+L"Usage:  drives [/?|-h|--help] [--version] [-v|--verbose] [-p|--parseable]\n"
+L"        [drive]\n"
 L"\n"
 L"Single letter options may use either dashes (-) or slashes (/) as option\n"
-L"prefixes, and are case insensitive.\n"
+L"prefixes, and are case insensitive. This program also prints all network\n"
+L"mappings and drive substitutions (see the 'subst' command).\n"
 L"\n"
 L"--help / -h       Print help information.\n"
 L"\n"
