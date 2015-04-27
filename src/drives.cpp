@@ -110,7 +110,7 @@ class DriveInfo
 
         while (!feof(results))
         {
-            if (fgetws (buffer, sizeof(buffer), results) == NULL)
+            if (fgetws (buffer, sizeof(buffer), results) == nullptr)
                 continue;
 
             // Scan past the "X:\ => " leader.
