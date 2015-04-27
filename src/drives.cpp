@@ -21,8 +21,8 @@ using namespace std;
 
 const auto programVersion = L"1.0";   // Program Version. '###+' prefix denotes interim modifications from version ###.
 
-const unsigned short NumPossibleDrives = 26; // Number of Possible Drives
-const unsigned short DriveIndexNone = 99;    // Drive Index for None/Null/Invalid Drive
+const unsigned short NumPossibleDrives { 26 }; // Number of Possible Drives
+const unsigned short DriveIndexNone { 99 };    // Drive Index for None/Null/Invalid Drive
 
 
 
@@ -36,17 +36,33 @@ bool DriveValid (DWORD logicalDrives, unsigned short driveIndex)
 
 class DriveInfo
 {
+  private:
+
+    unsigned short driveIndex;        // Logical drive index 0=A, 1=B, ..., 25=Z.
+    wstring  drive;                   // Drive string with trailing slash (for example, 'X:\').
+    wstring  driveNoSlash;            // Drive string with no trailing slash ('X:').
+    wstring  driveDesc;               // Type of drive volume
+
+    // Info from GetVolumeInformation
+    bool     isVolInfoValid {false};  // True if we got the drive volume information.
+    wstring  volumeLabel;             // Drive label
+    DWORD    serialNumber {0};        // Volume serial number
+    DWORD    maxComponentLength {0};  // Maximum length for volume path components
+    DWORD    fileSysFlags {0};        // Flags for volume file system
+    wstring  fileSysName;             // Name of volume file system
+
+    wstring  volumeName;              // Unique volume name
+    wstring  netMap;                  // If applicable, the network map associated with the drive
+    wstring  subst;                   // Subst redirection
+
+
     // This class contains the information for a single drive.
 
   public:
     DriveInfo (unsigned short _driveIndex /* in [0,26) */)
       : driveIndex(_driveIndex),
-        drive(L"_:\\"),
-        driveNoSlash(L"_:"),
-        isVolInfoValid(false),
-        serialNumber(0),
-        maxComponentLength(0),
-        fileSysFlags(0)
+        drive (L"_:\\"),
+        driveNoSlash (L"_:")
     {
         drive[0] = driveNoSlash[0] = L'A' + driveIndex;
     }
@@ -138,7 +154,7 @@ class DriveInfo
     {
         // Get the network-mapped connection, if any.
 
-        DWORD netMapBufferSize = MAX_PATH + 1;
+        DWORD netMapBufferSize { MAX_PATH + 1 };
         auto netMapBuffer = new wchar_t[1 + netMapBufferSize];
         auto retry = false;    // True iff this is a retry.
 
@@ -326,25 +342,7 @@ class DriveInfo
     }
 
 
-  private:
-
-    unsigned short driveIndex;      // Logical drive index 0=A, 1=B, ..., 25=Z.
-    wstring  drive;                 // Drive string with trailing slash (for example, 'X:\').
-    wstring  driveNoSlash;          // Drive string with no trailing slash ('X:').
-    wstring  driveDesc;             // Type of drive volume
-
-    // Info from GetVolumeInformation
-    bool     isVolInfoValid;        // True if we got the drive volume information.
-    wstring  volumeLabel;           // Drive label
-    DWORD    serialNumber;          // Volume serial number
-    DWORD    maxComponentLength;    // Maximum length for volume path components
-    DWORD    fileSysFlags;          // Flags for volume file system
-    wstring  fileSysName;           // Name of volume file system
-
-    wstring  volumeName;            // Unique volume name
-    wstring  netMap;                // If applicable, the network map associated with the drive
-    wstring  subst;                 // Subst redirection
-
+  private:   // Helper Methods
 
     static wstring DriveDesc (UINT type)
     {
@@ -373,23 +371,16 @@ class CommandOptions
     // This class stores and manages all command line options.
 
   public:
-    wstring        programName;       // Name of executable
-    bool           printVersion;      // True => Print program version
-    bool           printHelp;         // True => print help information
-    bool           printVerbose;      // True => Print verbose; include additional information
-    bool           printParseable;    // True => print results in machine-parseable format
-    unsigned short singleDriveIndex;  // Specified single drive, else null
+    wstring        programName;               // Name of executable
+    bool           printVersion {false};      // True => Print program version
+    bool           printHelp {false};         // True => print help information
+    bool           printVerbose {false};      // True => Print verbose; include additional information
+    bool           printParseable {false};    // True => print results in machine-parseable format
+    unsigned short singleDriveIndex { DriveIndexNone };  // Specified single drive, else null
 
     static wchar_t* helpText;
 
-    CommandOptions()
-      : printVerbose(false),
-        printVersion(false),
-        printHelp(false),
-        printParseable(false),
-        singleDriveIndex(DriveIndexNone)
-    {
-    }
+    CommandOptions() { }
 
 
     bool parseArguments (int argCount, wchar_t* argTokens[])
@@ -424,7 +415,7 @@ class CommandOptions
             }
             else if (0 == wcsncmp(token, L"--", wcslen(L"--")))
             {
-                auto tokenString = token;
+                wstring tokenString { token };
                 
                 // Double-dash switches
 
@@ -535,8 +526,8 @@ int wmain (int argc, wchar_t* argv[])
 
     DriveInfo::GetDriveSubstitutions (commandOptions.programName, driveSubstitutions);
 
-    unsigned short minDriveIndex = 0;
-    unsigned short maxDriveIndex = NumPossibleDrives - 1;
+    unsigned short minDriveIndex { 0 };
+    unsigned short maxDriveIndex { NumPossibleDrives - 1 };
 
     // Handle single-drive reporting.
 
@@ -554,8 +545,8 @@ int wmain (int argc, wchar_t* argv[])
 
     unsigned short driveIndex;    // Drive numerical index, [0,26).
 
-    size_t maxLenVolumeLabel = 0;
-    size_t maxLenDriveDesc = 0;
+    size_t maxLenVolumeLabel { 0 };
+    size_t maxLenDriveDesc { 0 };
 
     for (driveIndex = minDriveIndex;  driveIndex <= maxDriveIndex;  ++driveIndex)
     {
