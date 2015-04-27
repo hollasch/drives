@@ -114,7 +114,7 @@ class DriveInfo
                 continue;
 
             // Scan past the "X:\ => " leader.
-            wchar_t *ptr = buffer;
+            auto ptr = buffer;
             while (*ptr && *ptr != L'>')
                 ++ptr;
 
@@ -192,7 +192,6 @@ class DriveInfo
         // maxLenVolumeLabel:  Maximum string length for all volume labels.
         // maxLenDriveDesc:    Maximum string length for all drive type strings.
 
-
         wcout << driveNoSlash << L' ';
 
         // Print the volume label.
@@ -226,7 +225,7 @@ class DriveInfo
         }
 
         // Drive Type
-        wstring driveDescPadded = driveDesc;
+        auto driveDescPadded = driveDesc;
         driveDescPadded.append (maxLenDriveDesc - driveDesc.length(), L' ');
         wcout << driveDescPadded;
 
@@ -401,7 +400,7 @@ class CommandOptions
 
         for (int argIndex = 1;  argIndex < argCount;  ++argIndex)
         {
-            wchar_t* token = argTokens[argIndex];
+            auto token = argTokens[argIndex];
 
             if ((token[0] != L'/') && (token[0] != L'-'))
             {
@@ -425,7 +424,7 @@ class CommandOptions
             }
             else if (0 == wcsncmp(token, L"--", wcslen(L"--")))
             {
-                wstring tokenString = token;
+                auto tokenString = token;
                 
                 // Double-dash switches
 
@@ -530,7 +529,7 @@ int wmain (int argc, wchar_t* argv[])
         exit(0);
     }
 
-    DWORD logicalDrives = GetLogicalDrives();        // Query system logical drives.
+    auto logicalDrives = GetLogicalDrives();        // Query system logical drives.
     DriveInfo* driveInfo [NumPossibleDrives];        // Create drive info for each possible drive.
     wstring driveSubstitutions[NumPossibleDrives];   // Drive Substituttions
 
