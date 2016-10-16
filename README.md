@@ -12,27 +12,25 @@ command takes no arguments.
 Usage
 -----
 
-```
-drives 1.0
-drives: Print drive and volume information.
-Usage:  drives [/?|-h|--help] [--version] [-v|--verbose] [-p|--parseable]
-        [drive]
+    drives 1.0
+    drives: Print drive and volume information.
+    Usage:  drives [/?|-h|--help] [--version] [-v|--verbose] [-p|--parseable]
+            [drive]
 
-Single letter options may use either dashes (-) or slashes (/) as option
-prefixes, and are case insensitive. This program also prints all network
-mappings and drive substitutions (see the 'subst' command).
+    Single letter options may use either dashes (-) or slashes (/) as option
+    prefixes, and are case insensitive. This program also prints all network
+    mappings and drive substitutions (see the 'subst' command).
 
---help / -h       Print help information.
+    --help / -h       Print help information.
 
---verbose / -v    Print verbose; print additional information (only affects
-                  human format).
+    --verbose / -v    Print verbose; print additional information (only affects
+                      human format).
 
---version         Print program version.
+    --version         Print program version.
 
---parseable / -p  Print results in machine-parseable format.
+    --parseable / -p  Print results in machine-parseable format.
 
-[drive]           Drive letter for single drive report.
-```
+    [drive]           Drive letter for single drive report.
 
 
 Sample Output
@@ -49,13 +47,12 @@ Sample Output
 Developing
 ----------
 
-This project is managed with Visual Studio. It is built as a 64-bit application.
-However, it is structured in a way that is friendly to add build setups from
-other environments. Here's the overall tree structure:
+This project is managed with Visual Studio, and is built as a 64-bit
+application. However, it is structured in a way that is friendly to add build
+setups from other environments. Here's the overall tree structure:
 
     +---src
     ^---build
-    |   ^---win
     ^---out
         ^---x64
             ^---Debug
@@ -67,10 +64,10 @@ other environments. Here's the overall tree structure:
 
 Pure source files are in the `src` directory. The `build` directory contains all
 of the configuration for build tools. For now, it just has the Visual Studio
-build environment, in `build/win`. All generated build output goes to the `out`
-directory (it's always safe to delete the entire `out` directory).
+build environment and an `nmake`-style makefile. All generated build output goes
+to the `out` directory (it's always safe to delete the entire `out` directory).
 
-There's also a makefile that will build netuse, an experimental tool for now.
+The makefile just builds netuse, an experimental tool for now.
 
 
 --------------------------------------------------------------------------------
