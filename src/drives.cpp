@@ -19,7 +19,7 @@
 
 using namespace std;
 
-const auto programVersion = L"1.0";   // Program Version. '###+' prefix denotes interim modifications from version ###.
+const auto programVersion = L"1.0.0";   // Program Version (using the semantic versioning scheme)
 
 const unsigned short NumPossibleDrives { 26 }; // Number of Possible Drives
 const unsigned short DriveIndexNone { 99 };    // Drive Index for None/Null/Invalid Drive
@@ -475,6 +475,8 @@ class CommandOptions
 
 wchar_t* CommandOptions::helpText =
 L"drives: Print drive and volume information.\n"
+L"Source: https://github.com/hollasch/drives\n"
+L"\n"
 L"Usage:  drives [/?|-h|--help] [--version] [-v|--verbose] [-p|--parseable]\n"
 L"        [drive]\n"
 L"\n"
