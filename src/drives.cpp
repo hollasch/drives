@@ -19,7 +19,7 @@
 
 using namespace std;
 
-const auto programVersion = L"1.0.0";   // Program Version (using the semantic versioning scheme)
+const auto programVersion = L"1.0.1";   // Program Version (using the semantic versioning scheme)
 
 const unsigned short NumPossibleDrives { 26 }; // Number of Possible Drives
 const unsigned short DriveIndexNone { 99 };    // Drive Index for None/Null/Invalid Drive

@@ -11,6 +11,7 @@ netuse.obj
 
 # Visual Studio Files
 
+.vs/
 *.aps
 *.ilk
 *.opensdf
