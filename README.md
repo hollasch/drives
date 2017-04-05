@@ -1,17 +1,15 @@
 `drives` — print status of active Windows drive letters
-================================================================================
+====================================================================================================
 
 Description
 -----------
-
-This command-line tool prints the status of all active drive letters on Windows.
-It handles local drives, network-mapped drives, and removable drives. This
-command takes no arguments.
+This command-line tool prints the status of all active drive letters on Windows. It handles local
+drives, network-mapped drives, removable drives, and virtual drives (mapped via the `subst`
+command).
 
 
 Usage
 -----
-
     drives 1.0
     drives: Print drive and volume information.
     Usage:  drives [/?|-h|--help] [--version] [-v|--verbose] [-p|--parseable]
@@ -35,7 +33,6 @@ Usage
 
 Sample Output
 -------------
-
     C:\> drives
     A: "Data"    3642-e068  Fixed     [NTFS]
     C: "System"  b8c4-ce9e  Fixed     [NTFS]
@@ -46,7 +43,6 @@ Sample Output
 
 Developing
 ----------
-
 This project is managed with Visual Studio, and is built as a 64-bit
 application. However, it is structured in a way that is friendly to add build
 setups from other environments. Here's the overall tree structure:
@@ -71,6 +67,6 @@ The makefile just builds netuse, an experimental tool for now.
 
 
 --------------------------------------------------------------------------------
-Steve Hollasch <steve@hollasch.net>  
-https://github.com/hollasch/drives  
-2016 Oct 16
+Steve Hollasch <steve@hollasch.net><br>
+https://github.com/hollasch/drives<br>
+2017 Apr 5
