@@ -82,7 +82,7 @@ class DriveInfo
         isVolInfoValid = (0 != GetVolumeInformation (
             drive.c_str(), labelBuffer, sizeof labelBuffer, &serialNumber, &maxComponentLength, &fileSysFlags,
             fileSysBuffer, sizeof fileSysBuffer));
-        
+
         if (isVolInfoValid)
         {
             volumeLabel = labelBuffer;
@@ -97,7 +97,7 @@ class DriveInfo
             maxComponentLength = 0;
             fileSysFlags       = 0;
         }
-        
+
         wchar_t nameBuffer [MAX_PATH + 1];
         if (GetVolumeNameForVolumeMountPoint (drive.c_str(), nameBuffer, sizeof nameBuffer))
             volumeName = nameBuffer;
@@ -416,7 +416,7 @@ class CommandOptions
             else if (0 == wcsncmp(token, L"--", wcslen(L"--")))
             {
                 wstring tokenString { token };
-                
+
                 // Double-dash switches
 
                 if (tokenString == L"--help")
