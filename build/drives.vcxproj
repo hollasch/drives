@@ -21,6 +21,9 @@
   <ItemGroup>
     <ClCompile Include="..\src\drives.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\README.md" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{17B3A31D-06A2-4275-A777-D508F1769838}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
