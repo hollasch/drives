@@ -19,7 +19,7 @@
 
 using namespace std;
 
-const auto programVersion = L"1.0.1";   // Program Version (using the semantic versioning scheme)
+const auto programVersion = L"v2.0.0";   // Program Version (using the semantic versioning scheme)
 
 const unsigned short NumPossibleDrives { 26 }; // Number of Possible Drives
 const unsigned short DriveIndexNone { 99 };    // Drive Index for None/Null/Invalid Drive
@@ -393,7 +393,13 @@ class CommandOptions
         {
             auto token = argTokens[argIndex];
 
-            if ((token[0] != L'/') && (token[0] != L'-'))
+            if (token[0] == L'/' && token[1] == L'?' && token[2] == 0)
+            {
+                printHelp = true;
+                continue;
+            }
+
+            if (token[0] != L'-')
             {
                 // Non switches
 
@@ -473,29 +479,28 @@ class CommandOptions
 };
 
 
-wchar_t* CommandOptions::helpText =
-L"drives: Print drive and volume information.\n"
-L"Source: https://github.com/hollasch/drives\n"
-L"\n"
-L"Usage:  drives [/?|-h|--help] [--version] [-v|--verbose] [-p|--parseable]\n"
-L"        [drive]\n"
-L"\n"
-L"Single letter options may use either dashes (-) or slashes (/) as option\n"
-L"prefixes, and are case insensitive. This program also prints all network\n"
-L"mappings and drive substitutions (see the 'subst' command).\n"
-L"\n"
-L"--help / -h       Print help information.\n"
-L"\n"
-L"--verbose / -v    Print verbose; print additional information (only affects\n"
-L"                  human format).\n"
-L"\n"
-L"--version         Print program version.\n"
-L"\n"
-L"--parseable / -p  Print results in machine-parseable format.\n"
-L"\n"
-L"[drive]           Drive letter for single drive report.\n"
-L"\n"
-;
+wchar_t* CommandOptions::helpText = LR"(
+Source: https://github.com/hollasch/drives
+
+Usage:  drives [/?|-h|--help] [--version] [-v|--verbose] [-p|--parseable]
+        [drive]
+
+Single letter options may use either dashes (-) or slashes (/) as option
+prefixes, and are case insensitive. This program also prints all network
+mappings and drive substitutions (see the 'subst' command).
+
+[drive]           Optional drive letter for specific drive (colon optional)
+
+--help, -h, /?    Print help information.
+
+--verbose, -v     Print verbose; print additional information (only affects
+                  human format).
+
+--version         Print program version.
+
+--parseable, -p   Print results in machine-parseable format.
+
+)";
 
 
 
@@ -514,10 +519,16 @@ int wmain (int argc, wchar_t* argv[])
 
     if (commandOptions.printVersion)
     {
-        wcout << "drives " << programVersion << endl;
-
         if (commandOptions.printHelp)
-            wcout << CommandOptions::helpText;
+        {
+            wcout << "\ndrives " << programVersion << " - print Windows drive and volume information";
+            if (commandOptions.printHelp)
+                wcout << CommandOptions::helpText;
+        }
+        else
+        {
+            wcout << "drives " << programVersion << "\n";
+        }
 
         exit(0);
     }
