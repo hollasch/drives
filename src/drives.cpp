@@ -482,23 +482,26 @@ class CommandOptions
 wchar_t* CommandOptions::helpText = LR"(
 Source: https://github.com/hollasch/drives
 
-Usage:  drives [/?|-h|--help] [--version] [-v|--verbose] [-p|--parseable]
-        [drive]
+Usage: drives [/?|-h|--help] [--version]
+       [-v|--verbose] [-p|--parseable] [drive]
 
-Single letter options may use either dashes (-) or slashes (/) as option
-prefixes, and are case insensitive. This program also prints all network
-mappings and drive substitutions (see the 'subst' command).
+This program also prints all network mappings and drive substitutions
+(see the 'subst' command).
 
-[drive]           Optional drive letter for specific drive (colon optional)
+[drive]
+    Optional drive letter for specific drive report (colon optional)
 
---help, -h, /?    Print help information.
+--help, -h, /?
+    Print help information.
 
---verbose, -v     Print verbose; print additional information (only affects
-                  human format).
+--verbose, -v
+    Print verbose; print additional information (only affects human format).
 
---version         Print program version.
+--version
+    Print program version.
 
---parseable, -p   Print results in machine-parseable format.
+--parseable, -p
+    Print results in machine-parseable format.
 
 )";
 
