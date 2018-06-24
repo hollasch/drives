@@ -2,37 +2,41 @@
 ====================================================================================================
 
 Description
------------
+------------
 This command-line tool prints the status of all active drive letters on Windows. It handles local
 drives, network-mapped drives, removable drives, and virtual drives (mapped via the `subst`
 command).
 
 
 Usage
------
-    drives 1.0
-    drives: Print drive and volume information.
-    Usage:  drives [/?|-h|--help] [--version] [-v|--verbose] [-p|--parseable]
-            [drive]
+------
+    drives v2.0.0 - print Windows drive and volume information
+    Source: https://github.com/hollasch/drives
 
-    Single letter options may use either dashes (-) or slashes (/) as option
-    prefixes, and are case insensitive. This program also prints all network
-    mappings and drive substitutions (see the 'subst' command).
+    Usage: drives [/?|-h|--help] [--version]
+           [-v|--verbose] [-p|--parseable] [drive]
 
-    --help / -h       Print help information.
+    This program also prints all network mappings and drive substitutions
+    (see the 'subst' command).
 
-    --verbose / -v    Print verbose; print additional information (only affects
-                      human format).
+    [drive]
+        Optional drive letter for specific drive report (colon optional)
 
-    --version         Print program version.
+    --help, -h, /?
+        Print help information.
 
-    --parseable / -p  Print results in machine-parseable format.
+    --verbose, -v
+        Print verbose; print additional information (only affects human format).
 
-    [drive]           Drive letter for single drive report.
+    --version
+        Print program version.
+
+    --parseable, -p
+        Print results in machine-parseable format.
 
 
 Sample Output
--------------
+--------------
     C:\> drives
     A: "Data"    3642-e068  Fixed     [NTFS]
     C: "System"  b8c4-ce9e  Fixed     [NTFS]
@@ -42,31 +46,33 @@ Sample Output
 
 
 Developing
-----------
+-----------
 This project is managed with Visual Studio, and is built as a 64-bit
 application. However, it is structured in a way that is friendly to add build
 setups from other environments. Here's the overall tree structure:
 
+    +---build
+    +---out
+    |   +---x64
+    |       +---Debug
+    |       |   +---intermediate
+    |       |       +---drives.tlog
+    |       |
+    |       +---Release
+    |           +---intermediate
+    |               +---drives.tlog
     +---src
-    ^---build
-    ^---out
-        ^---x64
-            ^---Debug
-            |   ^---intermediate
-            |       ^---drives.tlog
-            ^---Release
-                ^---intermediate
-                    ^---drives.tlog
 
-Pure source files are in the `src` directory. The `build` directory contains all
-of the configuration for build tools. For now, it just has the Visual Studio
-build environment and an `nmake`-style makefile. All generated build output goes
-to the `out` directory (it's always safe to delete the entire `out` directory).
+The `build` directory contains all of the configuration for build tools. For
+now, it just has the Visual Studio build environment and an nmake-style
+makefile.
 
-The makefile just builds netuse, an experimental tool for now.
+The `out` directory receives all generated build output (it's always safe to
+delete the entire `out` directory).
+
+The `src` directory contains source C++ files.
 
 
 --------------------------------------------------------------------------------
 Steve Hollasch <steve@hollasch.net><br>
-https://github.com/hollasch/drives<br>
-2017 Apr 5
+https://github.com/hollasch/drives
