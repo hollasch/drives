@@ -74,12 +74,12 @@ class DriveInfo
     {
         // Loads the volume information for this drive. Note that the drive letter was passed in at construction.
 
-        driveDesc = DriveDesc (GetDriveType (drive.c_str()));
+        driveDesc = DriveDesc (GetDriveTypeW (drive.c_str()));
 
         wchar_t labelBuffer   [MAX_PATH + 1];   // Buffer for volume label
         wchar_t fileSysBuffer [MAX_PATH + 1];   // Buffer for file system name
 
-        isVolInfoValid = (0 != GetVolumeInformation (
+        isVolInfoValid = (0 != GetVolumeInformationW (
             drive.c_str(), labelBuffer, sizeof labelBuffer, &serialNumber, &maxComponentLength, &fileSysFlags,
             fileSysBuffer, sizeof fileSysBuffer));
 
@@ -99,7 +99,7 @@ class DriveInfo
         }
 
         wchar_t nameBuffer [MAX_PATH + 1];
-        if (GetVolumeNameForVolumeMountPoint (drive.c_str(), nameBuffer, sizeof nameBuffer))
+        if (GetVolumeNameForVolumeMountPointW (drive.c_str(), nameBuffer, sizeof nameBuffer))
             volumeName = nameBuffer;
         else
             volumeName.clear();
