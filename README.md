@@ -47,30 +47,25 @@ Sample Output
 
 Developing
 -----------
-This project is managed with Visual Studio, and is built as a 64-bit
-application. However, it is structured in a way that is friendly to add build
-setups from other environments. Here's the overall tree structure:
+This project uses the CMake build tool. CMake is a meta-build system that locates and uses your
+local development tools to build the project if possible.
 
-    +---build
-    +---out
-    |   +---x64
-    |       +---Debug
-    |       |   +---intermediate
-    |       |       +---drives.tlog
-    |       |
-    |       +---Release
-    |           +---intermediate
-    |               +---drives.tlog
-    +---src
+To build, first install [CMake][https://cmake.org/]. Then go to the project root directory and run
+the following command:
 
-The `build` directory contains all of the configuration for build tools. For
-now, it just has the Visual Studio build environment and an nmake-style
-makefile.
+    cmake -B build
 
-The `out` directory receives all generated build output (it's always safe to
-delete the entire `out` directory).
+This will locate your installed development tools and configure your project build in the `build/`
+directory. After that, whenever you want a new build, run this command:
 
-The `src` directory contains source C++ files.
+    cmake --build build
+
+This will build a debug version of the project, located in `build/Debug/`. To build a release
+version, run
+
+    cmake --build build --config release
+
+You can find the built release executable in `build/Release/`.
 
 
 --------------------------------------------------------------------------------
