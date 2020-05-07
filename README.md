@@ -45,8 +45,8 @@ Sample Output
     X: "Data"    3642-e068  Fixed     [NTFS] --> A:\setup\apps
 
 
-Developing
------------
+Building
+----------
 This project uses the CMake build tool. CMake is a meta-build system that locates and uses your
 local development tools to build the project if possible.
 
