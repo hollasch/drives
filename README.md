@@ -1,4 +1,4 @@
-`drives` — print status of active Windows drive letters
+drives — Print Status of Active Windows Drives
 ====================================================================================================
 
 Description
