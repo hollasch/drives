@@ -22,21 +22,19 @@ using namespace std;
 // Program Version (using the semantic versioning scheme)
 const auto programVersion = L"v3.0.0-alpha  2020-05-23  https://github.com/hollasch/drives/";
 
-const unsigned short NumPossibleDrives { 26 }; // Number of Possible Drives
-const unsigned short DriveIndexNone { 99 };    // Drive Index for None/Null/Invalid Drive
+const unsigned short NumPossibleDrives {26}; // Number of Possible Drives
+const unsigned short DriveIndexNone {99};    // Drive Index for None/Null/Invalid Drive
 
 
 
-bool DriveValid (DWORD logicalDrives, unsigned short driveIndex)
-{
+bool DriveValid (DWORD logicalDrives, unsigned short driveIndex) {
     // Returns true if the logical drive index is valid.
     return 0 != (logicalDrives & (1 << driveIndex));
 }
 
 
 
-class DriveInfo
-{
+class DriveInfo {
   private:
 
     unsigned short driveIndex;        // Logical drive index 0=A, 1=B, ..., 25=Z.
@@ -61,18 +59,18 @@ class DriveInfo
 
   public:
     DriveInfo (unsigned short _driveIndex /* in [0,26) */)
-      : driveIndex(_driveIndex),
-        drive (L"_:\\"),
-        driveNoSlash (L"_:")
+      : driveIndex {_driveIndex},
+        drive {L"_:\\"},
+        driveNoSlash {L"_:"}
     {
         drive[0] = driveNoSlash[0] = L'A' + driveIndex;
     }
 
-    ~DriveInfo() { }
+    ~DriveInfo() {}
 
 
-    void LoadVolumeInformation (wstring programName, wstring driveSubstitutions[NumPossibleDrives])
-    {
+    void LoadVolumeInformation (wstring programName, wstring driveSubstitutions[NumPossibleDrives]) {
+
         // Loads the volume information for this drive. Note that the drive letter was passed in at construction.
 
         driveDesc = DriveDesc (GetDriveTypeW (drive.c_str()));
@@ -84,13 +82,10 @@ class DriveInfo
             drive.c_str(), labelBuffer, sizeof labelBuffer, &serialNumber, &maxComponentLength, &fileSysFlags,
             fileSysBuffer, sizeof fileSysBuffer));
 
-        if (isVolInfoValid)
-        {
+        if (isVolInfoValid) {
             volumeLabel = labelBuffer;
             fileSysName = fileSysBuffer;
-        }
-        else
-        {
+        } else {
             volumeLabel.clear();
             fileSysName.clear();
 
@@ -111,22 +106,20 @@ class DriveInfo
     }
 
 
-    static void GetDriveSubstitutions (wstring programName, wstring (&substitutions)[NumPossibleDrives])
-    {
+    static void GetDriveSubstitutions (wstring programName, wstring (&substitutions)[NumPossibleDrives]) {
         // Get information on any substitutions for this drive.
 
         // Execute the 'subst' command to scrape existing drive substitutions.
         FILE *results = _wpopen (L"subst", L"rt");
-        if (!results)
-        {   wcerr << programName << L": ERROR: 'subst' command failed." << endl;
+        if (!results) {
+            wcerr << programName << L": ERROR: 'subst' command failed." << endl;
             return;
         }
 
         // Parse the output line-by-line to get each substitution.
         wchar_t buffer[4096];
 
-        while (!feof(results))
-        {
+        while (!feof(results)) {
             if (fgetws (buffer, sizeof(buffer), results) == nullptr)
                 continue;
 
@@ -151,17 +144,15 @@ class DriveInfo
     }
 
 
-    void GetNetworkMap()
-    {
+    void GetNetworkMap() {
         // Get the network-mapped connection, if any.
 
-        DWORD netMapBufferSize { MAX_PATH + 1 };
+        DWORD netMapBufferSize {MAX_PATH + 1};
         auto netMapBuffer = new wchar_t[1 + netMapBufferSize];
         auto retry = false;    // True iff this is a retry.
 
         do {
-            switch (WNetGetConnectionW (driveNoSlash.c_str(), netMapBuffer, &netMapBufferSize))
-            {
+            switch (WNetGetConnectionW (driveNoSlash.c_str(), netMapBuffer, &netMapBufferSize)) {
                 case NO_ERROR:
                     break;
 
@@ -192,8 +183,7 @@ class DriveInfo
     }
 
 
-    void GetMaxFieldLengths (size_t &maxLenVolumeLabel, size_t &maxLenDriveDesc)
-    {
+    void GetMaxFieldLengths (size_t &maxLenVolumeLabel, size_t &maxLenDriveDesc) {
         // Computes the maximum field lengths, incorporating the length of this drive's fields.
 
         maxLenVolumeLabel = max (maxLenVolumeLabel, volumeLabel.length());
@@ -201,8 +191,7 @@ class DriveInfo
     }
 
 
-    void PrintVolumeInformation (bool verbose, size_t maxLenVolumeLabel, size_t maxLenDriveDesc)
-    {
+    void PrintVolumeInformation (bool verbose, size_t maxLenVolumeLabel, size_t maxLenDriveDesc) {
         // Prints human-readable volume information for this drive.
         //
         // verbose:            True => print additional volume information.
@@ -220,8 +209,7 @@ class DriveInfo
 
         if (volumeLabel.length())
             formattedVolumeLabel.append(L"\"").append(volumeLabel).append(L"\"");
-        else
-        {
+        else {
             formattedVolumeLabel += L"-";
             lenVolumeLabel = 1;
         }
@@ -233,8 +221,7 @@ class DriveInfo
 
         if (!isVolInfoValid)
             wcout << L" -          ";
-        else
-        {
+        else {
             wcout << hex << L' ';
             wcout << setw(4) << setfill(L'0') << (serialNumber >> 16) << L'-';
             wcout << setw(4) << setfill(L'0') << (serialNumber & 0xffff);
@@ -261,24 +248,19 @@ class DriveInfo
             wcout << L"--> " << netMap;
 
         // Print additional information if requested.
-        if (verbose)
-        {
-            if (volumeName.length())
-                wcout << endl << L"   " << volumeName << endl;
-        }
+        if (verbose && volumeName.length())
+            wcout << endl << L"   " << volumeName << endl;
 
         wcout << endl;
     }
 
 
-    void PrintParseableVolumeInformation()
-    {
+    void PrintParseableVolumeInformation() {
         // Prints the information for this volume in a machine-parseable format.
 
         wcout << driveNoSlash << L"driveType: \"" << driveDesc << L"\"" << endl;
 
-        if (isVolInfoValid)
-        {
+        if (isVolInfoValid) {
             wcout << driveNoSlash << L"label: \"" << volumeLabel << L"\"" << endl;
 
             wcout << driveNoSlash << L"serialNumber: \"" << hex;
@@ -306,9 +288,10 @@ class DriveInfo
             flagPrint (this, L"flagFSCaseIsPreserved", FS_CASE_IS_PRESERVED);
             flagPrint (this, L"flagFSPersistentACLs", FS_PERSISTENT_ACLS);
             flagPrint (this, L"flagFSVolIsCompressed", FS_VOL_IS_COMPRESSED);
-        }
-        else
-        {   wcout << driveNoSlash << L"label: null" << endl;
+
+        } else {
+
+            wcout << driveNoSlash << L"label: null" << endl;
             wcout << driveNoSlash << L"serialNumber: null" << endl;
             wcout << driveNoSlash << L"maxComponentLength: null" << endl;
             wcout << driveNoSlash << L"fileSystem: null" << endl;
@@ -345,12 +328,10 @@ class DriveInfo
 
   private:   // Helper Methods
 
-    static wstring DriveDesc (UINT type)
-    {
+    static wstring DriveDesc (UINT type) {
         // Returns the string value for drive type values.
 
-        switch (type)
-        {
+        switch (type) {
             case DRIVE_NO_ROOT_DIR:  return L"No root";
             case DRIVE_REMOVABLE:    return L"Removable";
             case DRIVE_FIXED:        return L"Fixed";
@@ -367,8 +348,7 @@ class DriveInfo
 
 //======================================================================================================================
 
-class CommandOptions
-{
+class CommandOptions {
     // This class stores and manages all command line options.
 
   public:
@@ -377,31 +357,27 @@ class CommandOptions
     bool           printHelp {false};         // True => print help information
     bool           printVerbose {false};      // True => Print verbose; include additional information
     bool           printParseable {false};    // True => print results in machine-parseable format
-    unsigned short singleDriveIndex { DriveIndexNone };  // Specified single drive, else null
+    unsigned short singleDriveIndex {DriveIndexNone};  // Specified single drive, else null
 
     static wchar_t* helpText;
 
-    CommandOptions() { }
+    CommandOptions() {}
 
 
-    bool parseArguments (int argCount, wchar_t* argTokens[])
-    {
+    bool parseArguments (int argCount, wchar_t* argTokens[]) {
         // Parse the command line into the individual command options.
 
         programName = argTokens[0];
 
-        for (int argIndex = 1;  argIndex < argCount;  ++argIndex)
-        {
+        for (int argIndex = 1;  argIndex < argCount;  ++argIndex) {
             auto token = argTokens[argIndex];
 
-            if (token[0] == L'/' && token[1] == L'?' && token[2] == 0)
-            {
+            if (token[0] == L'/' && token[1] == L'?' && token[2] == 0) {
                 printHelp = true;
                 continue;
             }
 
-            if (token[0] != L'-')
-            {
+            if (token[0] != L'-') {
                 // Non switches
 
                 // Allowable drive formats: 'X', 'X:.*'.
@@ -410,19 +386,16 @@ class CommandOptions
                                               || ((L'a' <= token[0]) && (token[0] <= L'z'));
                 const bool driveStringTailValid = (token[1] == 0) || (token[1] == L':');
 
-                if (driveLetterInRange && driveStringTailValid)
-                {
+                if (driveLetterInRange && driveStringTailValid) {
                     singleDriveIndex = towupper(token[0]) - L'A';
-                }
-                else
-                {
+                } else {
                     wcerr << programName << L": ERROR: Unexpected argument (" << token << ").\n";
                     return false;
                 }
-            }
-            else if (0 == wcsncmp(token, L"--", wcslen(L"--")))
-            {
-                wstring tokenString { token };
+
+            } else if (0 == wcsncmp(token, L"--", wcslen(L"--"))) {
+
+                wstring tokenString {token};
 
                 // Double-dash switches
 
@@ -434,25 +407,22 @@ class CommandOptions
                     printVerbose = true;
                 else if (tokenString == L"--version")
                     printVersion = true;
-                else
-                {
+                else {
                     wcerr << programName << L": ERROR: Unrecognized option (" << token << L").\n";
                     return false;
                 }
-            }
-            else
-            {
+
+            } else {
+
                 // Single letter switches
 
-                if (!token[1])
-                {
+                if (!token[1]) {
                     wcerr << programName << L": ERROR: Missing option letter for '" << token[0] << L"'.\n";
                     return false;
                 }
                 ++token;
 
-                do switch(*token)
-                {
+                do switch(*token) {
                     case L'h': case L'H': case L'?':
                         printHelp = true;
                         break;
@@ -508,43 +478,39 @@ This program also prints all network mappings and drive substitutions (see the
 
 //======================================================================================================================
 
-int wmain (int argc, wchar_t* argv[])
-{
-    // Main Program Entry Point
+int wmain (int argc, wchar_t* argv[]) {
 
     // Parse command line options.
-
     CommandOptions commandOptions;
 
     if (!commandOptions.parseArguments(argc, argv))
         exit(1);
 
-    if (commandOptions.printVersion)
-    {
-        if (commandOptions.printHelp)
+    if (commandOptions.printVersion) {
+        if (!commandOptions.printHelp) {
+            wcout << L"drives  " << programVersion << L'\n';
+        } else {
             wcout << L"drives - Prints Windows drive and volume information\n" << programVersion
                   << CommandOptions::helpText;
-        else
-            wcout << L"drives  " << programVersion << L'\n';
+        }
 
         exit(0);
     }
 
     auto logicalDrives = GetLogicalDrives();        // Query system logical drives.
-    DriveInfo* driveInfo [NumPossibleDrives];        // Create drive info for each possible drive.
-    wstring driveSubstitutions[NumPossibleDrives];   // Drive Substituttions
+    DriveInfo* driveInfo [NumPossibleDrives];       // Create drive info for each possible drive.
+    wstring driveSubstitutions[NumPossibleDrives];  // Drive Substituttions
 
     DriveInfo::GetDriveSubstitutions (commandOptions.programName, driveSubstitutions);
 
-    unsigned short minDriveIndex { 0 };
-    unsigned short maxDriveIndex { NumPossibleDrives - 1 };
+    unsigned short minDriveIndex {0};
+    unsigned short maxDriveIndex {NumPossibleDrives - 1};
 
     // Handle single-drive reporting.
 
-    if (commandOptions.singleDriveIndex != DriveIndexNone)
-    {
-        if (!DriveValid(logicalDrives, commandOptions.singleDriveIndex))
-        {   wchar_t driveLetter = L'A' + commandOptions.singleDriveIndex;
+    if (commandOptions.singleDriveIndex != DriveIndexNone) {
+        if (!DriveValid(logicalDrives, commandOptions.singleDriveIndex)) {
+            wchar_t driveLetter = L'A' + commandOptions.singleDriveIndex;
             wcout << commandOptions.programName << L": No volume present at drive " << driveLetter << L":." << endl;
             exit(1);
         }
@@ -555,11 +521,10 @@ int wmain (int argc, wchar_t* argv[])
 
     unsigned short driveIndex;    // Drive numerical index, [0,26).
 
-    size_t maxLenVolumeLabel { 0 };
-    size_t maxLenDriveDesc { 0 };
+    size_t maxLenVolumeLabel {0};
+    size_t maxLenDriveDesc {0};
 
-    for (driveIndex = minDriveIndex;  driveIndex <= maxDriveIndex;  ++driveIndex)
-    {
+    for (driveIndex = minDriveIndex;  driveIndex <= maxDriveIndex;  ++driveIndex) {
         if (!DriveValid(logicalDrives, driveIndex))
             continue;
 
@@ -570,8 +535,7 @@ int wmain (int argc, wchar_t* argv[])
 
     // For each drive, print volume information.
 
-    for (driveIndex = minDriveIndex;  driveIndex <= maxDriveIndex;  ++driveIndex)
-    {
+    for (driveIndex = minDriveIndex;  driveIndex <= maxDriveIndex;  ++driveIndex) {
         if (!DriveValid(logicalDrives, driveIndex))
             continue;
 
