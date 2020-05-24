@@ -1,4 +1,4 @@
-drives — Print Status of Active Windows Drives
+drives -- Print status of active windows drives
 ====================================================================================================
 
 Description

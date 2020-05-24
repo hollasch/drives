@@ -19,7 +19,8 @@
 
 using namespace std;
 
-const auto programVersion = L"v2.0.0";   // Program Version (using the semantic versioning scheme)
+// Program Version (using the semantic versioning scheme)
+const auto programVersion = L"v3.0.0-alpha  2020-05-23  https://github.com/hollasch/drives/";
 
 const unsigned short NumPossibleDrives { 26 }; // Number of Possible Drives
 const unsigned short DriveIndexNone { 99 };    // Drive Index for None/Null/Invalid Drive
@@ -480,13 +481,11 @@ class CommandOptions
 
 
 wchar_t* CommandOptions::helpText = LR"(
-Source: https://github.com/hollasch/drives
 
-Usage: drives [/?|-h|--help] [--version]
-       [-v|--verbose] [-p|--parseable] [drive]
+Usage: drives [/?|-h|--help] [--version] [-v|--verbose] [-p|--parseable] [drive]
 
-This program also prints all network mappings and drive substitutions
-(see the 'subst' command).
+This program also prints all network mappings and drive substitutions (see the
+'subst' command).
 
 [drive]
     Optional drive letter for specific drive report (colon optional)
@@ -523,15 +522,10 @@ int wmain (int argc, wchar_t* argv[])
     if (commandOptions.printVersion)
     {
         if (commandOptions.printHelp)
-        {
-            wcout << "\ndrives " << programVersion << " - print Windows drive and volume information";
-            if (commandOptions.printHelp)
-                wcout << CommandOptions::helpText;
-        }
+            wcout << L"drives - Prints Windows drive and volume information\n" << programVersion
+                  << CommandOptions::helpText;
         else
-        {
-            wcout << "drives " << programVersion << "\n";
-        }
+            wcout << L"drives  " << programVersion << L'\n';
 
         exit(0);
     }
