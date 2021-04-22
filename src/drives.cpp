@@ -449,25 +449,27 @@ class CommandOptions {
 
 wchar_t* helpText = LR"(
 drives: Print Windows drive and volume information
-Usage:  drives [/?|-h|--help] [--version] [-v|--verbose] [-p|--parseable] [drive]
+usage : drives  [--verbose|-v] [--parseable|-p] [drive]
+                [--help|-h|/?] [--version]
 
 This program also prints all network mappings and drive substitutions (see the
 'subst' command).
 
-[drive]
-    Optional drive letter for specific drive report (colon optional)
+Options
+    [drive]
+        Optional drive letter for specific drive report (colon optional)
 
---help, -h, /?
-    Print help information.
+    --help, -h, /?
+        Print help information.
 
---verbose, -v
-    Print verbose; print additional information (only affects human format).
+    --verbose, -v
+        Print verbose; print additional information (only affects human format).
 
---version
-    Print program version.
+    --version
+        Print program version.
 
---parseable, -p
-    Print results in machine-parseable format.
+    --parseable, -p
+        Print results in machine-parseable format.
 
 )";
 
