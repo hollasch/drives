@@ -20,7 +20,7 @@
 using namespace std;
 
 // Program Version (using the semantic versioning scheme)
-const auto programVersion = L"drives v3.0.0-alpha | 2020-05-23 | https://github.com/hollasch/drives";
+const auto programVersion = L"drives v3.0.0-alpha | 2021-04-21 | https://github.com/hollasch/drives";
 
 const unsigned short NumPossibleDrives {26}; // Number of Possible Drives
 const unsigned short DriveIndexNone {99};    // Drive Index for None/Null/Invalid Drive
