@@ -359,10 +359,7 @@ class CommandOptions {
     bool           printParseable {false};    // True => print results in machine-parseable format
     unsigned short singleDriveIndex {DriveIndexNone};  // Specified single drive, else null
 
-    static wchar_t* helpText;
-
     CommandOptions() {}
-
 
     bool parseArguments (int argCount, wchar_t* argTokens[]) {
         // Parse the command line into the individual command options.
@@ -450,7 +447,7 @@ class CommandOptions {
 };
 
 
-wchar_t* CommandOptions::helpText = LR"(
+wchar_t* helpText = LR"(
 drives: Print Windows drive and volume information
 Usage:  drives [/?|-h|--help] [--version] [-v|--verbose] [-p|--parseable] [drive]
 
@@ -490,7 +487,7 @@ int wmain (int argc, wchar_t* argv[]) {
         if (!commandOptions.printHelp) {
             wcout << programVersion << L'\n';
         } else {
-            wcout << CommandOptions::helpText << programVersion << L'\n';
+            wcout << helpText << programVersion << L'\n';
         }
 
         exit(0);
