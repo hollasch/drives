@@ -255,8 +255,8 @@ class DriveInfo {
     }
 
 
-    void PrintParseableVolumeInformation() {
-        // Prints the information for this volume in a machine-parseable format.
+    void PrintJSONVolumeInformation() {
+        // Prints volume information in JSON format.
 
         wcout << driveNoSlash << L"driveType: \"" << driveDesc << L"\"" << endl;
 
@@ -356,7 +356,7 @@ class CommandOptions {
     bool           printVersion {false};      // True => Print program version
     bool           printHelp {false};         // True => print help information
     bool           printVerbose {false};      // True => Print verbose; include additional information
-    bool           printParseable {false};    // True => print results in machine-parseable format
+    bool           printJSON {false};         // True => print results in JSON format
     unsigned short singleDriveIndex {DriveIndexNone};  // Specified single drive, else null
 
     CommandOptions() {}
@@ -398,8 +398,8 @@ class CommandOptions {
 
                 if (tokenString == L"--help")
                     printHelp = true;
-                else if (tokenString == L"--parseable")
-                    printParseable = true;
+                else if (tokenString == L"--json")
+                    printJSON = true;
                 else if (tokenString == L"--verbose")
                     printVerbose = true;
                 else if (tokenString == L"--version")
@@ -424,8 +424,8 @@ class CommandOptions {
                         printHelp = true;
                         break;
 
-                    case L'p': case L'P':
-                        printParseable = true;
+                    case L'j': case L'J':
+                        printJSON = true;
                         break;
 
                     case L'v': case L'V':
@@ -449,7 +449,7 @@ class CommandOptions {
 
 wchar_t* helpText = LR"(
 drives: Print Windows drive and volume information
-usage : drives  [--verbose|-v] [--parseable|-p] [drive]
+usage : drives  [--json|-j] [--verbose|-v] [drive]
                 [--help|-h|/?] [--version]
 
 This program also prints all network mappings and drive substitutions (see the
@@ -457,19 +457,20 @@ This program also prints all network mappings and drive substitutions (see the
 
 Options
     [drive]
-        Optional drive letter for specific drive report (colon optional)
+        Optional drive letter for specific drive report (colon optional).
 
     --help, -h, /?
         Print help information.
 
+    --json, -j
+        Print results in JSON format.
+
     --verbose, -v
-        Print verbose; print additional information (only affects human format).
+        Print full drive information for the human-readable format. This has no
+        effect if --json is supplied.
 
     --version
         Print program version.
-
-    --parseable, -p
-        Print results in machine-parseable format.
 
 )";
 
@@ -496,7 +497,7 @@ int wmain (int argc, wchar_t* argv[]) {
     }
 
     auto logicalDrives = GetLogicalDrives();        // Query system logical drives.
-    DriveInfo* driveInfo [NumPossibleDrives];       // Create drive info for each possible drive.
+    DriveInfo* driveInfo[NumPossibleDrives];        // Create drive info for each possible drive.
     wstring driveSubstitutions[NumPossibleDrives];  // Drive Substituttions
 
     DriveInfo::GetDriveSubstitutions (commandOptions.programName, driveSubstitutions);
@@ -537,8 +538,8 @@ int wmain (int argc, wchar_t* argv[]) {
         if (!DriveValid(logicalDrives, driveIndex))
             continue;
 
-        if (commandOptions.printParseable)
-            driveInfo[driveIndex]->PrintParseableVolumeInformation();
+        if (commandOptions.printJSON)
+            driveInfo[driveIndex]->PrintJSONVolumeInformation();
         else
             driveInfo[driveIndex]->
                 PrintVolumeInformation(commandOptions.printVerbose, maxLenVolumeLabel, maxLenDriveDesc);
