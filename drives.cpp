@@ -24,6 +24,8 @@ const auto programVersion = L"drives 3.0.0-alpha.1 | 2021-04-21 | https://github
 
 const unsigned short NumPossibleDrives {26}; // Number of Possible Drives
 const unsigned short DriveIndexNone {99};    // Drive Index for None/Null/Invalid Drive
+const unsigned short minDriveIndex {0};
+const unsigned short maxDriveIndex {NumPossibleDrives - 1};
 
 
 
@@ -447,6 +449,49 @@ class CommandOptions {
 };
 
 
+void PrintResultsHuman(const CommandOptions& options, DriveInfo* driveInfo[], int logicalDrives) {
+    size_t maxLenVolumeLabel {0};
+    size_t maxLenDriveDesc {0};
+
+    unsigned int minDrive{0}, maxDrive{0};
+    if (options.singleDriveIndex != DriveIndexNone)
+        minDrive = maxDrive = options.singleDriveIndex;
+    else {
+        minDrive = minDriveIndex;
+        maxDrive = maxDriveIndex;
+    }
+
+    for (auto driveIndex = minDrive;  driveIndex <= maxDrive;  ++driveIndex) {
+        if (DriveValid(logicalDrives, driveIndex))
+            driveInfo[driveIndex]->GetMaxFieldLengths(maxLenVolumeLabel, maxLenDriveDesc);
+    }
+
+    for (auto driveIndex = minDrive;  driveIndex <= maxDrive;  ++driveIndex) {
+        if (DriveValid(logicalDrives, driveIndex)) {
+            driveInfo[driveIndex]->
+                PrintVolumeInformation(options.printVerbose, maxLenVolumeLabel, maxLenDriveDesc);
+        }
+    }
+}
+
+
+void PrintResultsJSON(const CommandOptions& options, DriveInfo* driveInfo[], int logicalDrives) {
+    unsigned int minDrive{0}, maxDrive{0};
+
+    if (options.singleDriveIndex != DriveIndexNone)
+        minDrive = maxDrive = options.singleDriveIndex;
+    else {
+        minDrive = minDriveIndex;
+        maxDrive = maxDriveIndex;
+    }
+
+    for (auto driveIndex = minDrive;  driveIndex <= maxDrive;  ++driveIndex) {
+        if (DriveValid(logicalDrives, driveIndex))
+            driveInfo[driveIndex]->PrintJSONVolumeInformation();
+    }
+}
+
+
 wchar_t* helpText = LR"(
 drives: Print Windows drive and volume information
 usage : drives  [--json|-j] [--verbose|-v] [drive]
@@ -496,16 +541,15 @@ int wmain (int argc, wchar_t* argv[]) {
         exit(0);
     }
 
-    auto logicalDrives = GetLogicalDrives();        // Query system logical drives.
+    int logicalDrives = GetLogicalDrives();        // Query system logical drives.
     DriveInfo* driveInfo[NumPossibleDrives];        // Create drive info for each possible drive.
     wstring driveSubstitutions[NumPossibleDrives];  // Drive Substituttions
 
     DriveInfo::GetDriveSubstitutions (commandOptions.programName, driveSubstitutions);
 
-    unsigned short minDriveIndex {0};
-    unsigned short maxDriveIndex {NumPossibleDrives - 1};
-
     // Handle single-drive reporting.
+
+    unsigned int minDrive{0}, maxDrive{maxDriveIndex};
 
     if (commandOptions.singleDriveIndex != DriveIndexNone) {
         if (!DriveValid(logicalDrives, commandOptions.singleDriveIndex)) {
@@ -513,37 +557,31 @@ int wmain (int argc, wchar_t* argv[]) {
             wcout << commandOptions.programName << L": No volume present at drive " << driveLetter << L":." << endl;
             exit(1);
         }
-        minDriveIndex = maxDriveIndex = commandOptions.singleDriveIndex;
+        minDrive = maxDrive = commandOptions.singleDriveIndex;
     }
 
     // Query all drives for volume information, and get maximum field lengths.
 
     unsigned short driveIndex;    // Drive numerical index, [0,26).
 
-    size_t maxLenVolumeLabel {0};
-    size_t maxLenDriveDesc {0};
-
-    for (driveIndex = minDriveIndex;  driveIndex <= maxDriveIndex;  ++driveIndex) {
-        if (!DriveValid(logicalDrives, driveIndex))
-            continue;
-
-        driveInfo[driveIndex] = new DriveInfo(driveIndex);
-        driveInfo[driveIndex]->LoadVolumeInformation (commandOptions.programName, driveSubstitutions);
-        driveInfo[driveIndex]->GetMaxFieldLengths(maxLenVolumeLabel, maxLenDriveDesc);
+    for (driveIndex = minDrive;  driveIndex <= maxDrive;  ++driveIndex) {
+        if (DriveValid(logicalDrives, driveIndex)) {
+            driveInfo[driveIndex] = new DriveInfo(driveIndex);
+            driveInfo[driveIndex]->LoadVolumeInformation (commandOptions.programName, driveSubstitutions);
+        } else {
+            driveInfo[driveIndex] = nullptr;
+        }
     }
 
     // For each drive, print volume information.
 
+    if (commandOptions.printJSON)
+        PrintResultsJSON(commandOptions, driveInfo, logicalDrives);
+    else
+        PrintResultsHuman(commandOptions, driveInfo, logicalDrives);
+
+    // Cleanup
     for (driveIndex = minDriveIndex;  driveIndex <= maxDriveIndex;  ++driveIndex) {
-        if (!DriveValid(logicalDrives, driveIndex))
-            continue;
-
-        if (commandOptions.printJSON)
-            driveInfo[driveIndex]->PrintJSONVolumeInformation();
-        else
-            driveInfo[driveIndex]->
-                PrintVolumeInformation(commandOptions.printVerbose, maxLenVolumeLabel, maxLenDriveDesc);
-
         delete driveInfo[driveIndex];
     }
 }
