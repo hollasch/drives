@@ -249,7 +249,7 @@ class DriveInfo {
 
         // Print additional information if requested.
         if (verbose && volumeName.length())
-            wcout << endl << L"   " << volumeName << endl;
+            wcout << L"\n   " << volumeName << "\n";
 
         wcout << endl;
     }
@@ -258,22 +258,22 @@ class DriveInfo {
     void PrintJSONVolumeInformation() {
         // Prints volume information in JSON format.
 
-        wcout << driveNoSlash << L"driveType: \"" << driveDesc << L"\"" << endl;
+        wcout << driveNoSlash << L"driveType: \"" << driveDesc << L"\"\n";
 
         if (isVolInfoValid) {
-            wcout << driveNoSlash << L"label: \"" << volumeLabel << L"\"" << endl;
+            wcout << driveNoSlash << L"label: \"" << volumeLabel << L"\"\n";
 
             wcout << driveNoSlash << L"serialNumber: \"" << hex;
             wcout << setw(4) << setfill(L'0') << (serialNumber >> 16) << L'-';
             wcout << setw(4) << setfill(L'0') << (serialNumber & 0xffff);
-            wcout << dec << L"\"" << endl;
+            wcout << dec << L"\"\n";
 
-            wcout << driveNoSlash << L"maxComponentLength: " << maxComponentLength << endl;
-            wcout << driveNoSlash << L"fileSystem: \"" << fileSysName << "\"" << endl;
-            wcout << driveNoSlash << L"fileSysFlags: " <<hex <<setw(8) <<setfill(L'0') << fileSysFlags <<dec << endl;
+            wcout << driveNoSlash << L"maxComponentLength: " << maxComponentLength << "\n";
+            wcout << driveNoSlash << L"fileSystem: \"" << fileSysName << "\"\n";
+            wcout << driveNoSlash << L"fileSysFlags: " <<hex <<setw(8) <<setfill(L'0') << fileSysFlags <<dec;
 
             auto flagPrint = [](DriveInfo* info, wstring desc, DWORD flag) {
-                wcout << info->driveNoSlash << desc << L": " << ((info->fileSysFlags & flag) != 0) << endl;
+                wcout << info->driveNoSlash << desc << L": " << ((info->fileSysFlags & flag) != 0) << "\n";
             };
 
             flagPrint (this, L"flagFileNamedStreams", FILE_NAMED_STREAMS);
@@ -291,38 +291,38 @@ class DriveInfo {
 
         } else {
 
-            wcout << driveNoSlash << L"label: null" << endl;
-            wcout << driveNoSlash << L"serialNumber: null" << endl;
-            wcout << driveNoSlash << L"maxComponentLength: null" << endl;
-            wcout << driveNoSlash << L"fileSystem: null" << endl;
-            wcout << driveNoSlash << L"fileSysFlags: null" << endl;
-            wcout << driveNoSlash << L"flagFileNamedStreams: null" << endl;
-            wcout << driveNoSlash << L"flagFileSupportsObjectIDs: null" << endl;
-            wcout << driveNoSlash << L"flagFileSupportsReparsePoints: null" << endl;
-            wcout << driveNoSlash << L"flagFileSupportsSparseFiles: null" << endl;
-            wcout << driveNoSlash << L"flagFileVolumeQuotas: null" << endl;
-            wcout << driveNoSlash << L"flagFSCaseSensitive: null" << endl;
-            wcout << driveNoSlash << L"flagFSFileCompression: null" << endl;
-            wcout << driveNoSlash << L"flagFSFileEncryption: null" << endl;
-            wcout << driveNoSlash << L"flagFSUnicodeStoredOnDisk: null" << endl;
-            wcout << driveNoSlash << L"flagFSCaseIsPreserved: null" << endl;
-            wcout << driveNoSlash << L"flagFSPersistentACLs: null" << endl;
-            wcout << driveNoSlash << L"flagFSVolIsCompressed: null" << endl;
+            wcout << driveNoSlash << L"label: null\n";
+            wcout << driveNoSlash << L"serialNumber: null\n";
+            wcout << driveNoSlash << L"maxComponentLength: null\n";
+            wcout << driveNoSlash << L"fileSystem: null\n";
+            wcout << driveNoSlash << L"fileSysFlags: null\n";
+            wcout << driveNoSlash << L"flagFileNamedStreams: null\n";
+            wcout << driveNoSlash << L"flagFileSupportsObjectIDs: null\n";
+            wcout << driveNoSlash << L"flagFileSupportsReparsePoints: null\n";
+            wcout << driveNoSlash << L"flagFileSupportsSparseFiles: null\n";
+            wcout << driveNoSlash << L"flagFileVolumeQuotas: null\n";
+            wcout << driveNoSlash << L"flagFSCaseSensitive: null\n";
+            wcout << driveNoSlash << L"flagFSFileCompression: null\n";
+            wcout << driveNoSlash << L"flagFSFileEncryption: null\n";
+            wcout << driveNoSlash << L"flagFSUnicodeStoredOnDisk: null\n";
+            wcout << driveNoSlash << L"flagFSCaseIsPreserved: null\n";
+            wcout << driveNoSlash << L"flagFSPersistentACLs: null\n";
+            wcout << driveNoSlash << L"flagFSVolIsCompressed: null\n";
         }
 
-        wcout << driveNoSlash << L"name: \"" << volumeName << "\"" << endl;
+        wcout << driveNoSlash << L"name: \"" << volumeName << "\"\n";
 
         wcout << driveNoSlash << L"driveSubst: ";
         if (!subst.length())
-            wcout << "null" << endl;
+            wcout << "null\n";
         else
-            wcout << "\"" << subst << "\"" << endl;
+            wcout << "\"" << subst << "\"\n";
 
         wcout << driveNoSlash << L"netMap: ";
         if (!netMap.length())
-            wcout << "null" << endl;
+            wcout << "null\n";
         else
-            wcout << "\"" << netMap << "\"" << endl;
+            wcout << "\"" << netMap << "\"\n";
     }
 
 
