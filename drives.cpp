@@ -23,26 +23,24 @@ using namespace std;
 const auto programVersion = L"drives 3.0.0-alpha.1 | 2021-04-21 | https://github.com/hollasch/drives";
 
 const unsigned short NumPossibleDrives {26}; // Number of Possible Drives
-const unsigned short DriveIndexNone {99};    // Drive Index for None/Null/Invalid Drive
-const unsigned short minDriveIndex {0};
-const unsigned short maxDriveIndex {NumPossibleDrives - 1};
 
 
+//======================================================================================================================
 
-bool DriveValid (DWORD logicalDrives, unsigned short driveIndex) {
-    // Returns true if the logical drive index is valid.
-    return 0 != (logicalDrives & (1 << driveIndex));
+bool DriveValid (DWORD logicalDrives, wchar_t driveLetter) {
+    // Returns true if the drive letter is valid.
+    return 0 != (logicalDrives & (1 << (driveLetter - L'A')));
 }
 
-
+//======================================================================================================================
 
 class DriveInfo {
   private:
 
-    unsigned short driveIndex;        // Logical drive index 0=A, 1=B, ..., 25=Z.
-    wstring  drive;                   // Drive string with trailing slash (for example, 'X:\').
-    wstring  driveNoSlash;            // Drive string with no trailing slash ('X:').
-    wstring  driveDesc;               // Type of drive volume
+    int      driveIndex;        // Logical drive index 0=A, 1=B, ..., 25=Z.
+    wstring  drive;             // Drive string with trailing slash (for example, 'X:\').
+    wstring  driveNoSlash;      // Drive string with no trailing slash ('X:').
+    wstring  driveDesc;         // Type of drive volume
 
     // Info from GetVolumeInformation
     bool     isVolInfoValid {false};  // True if we got the drive volume information.
@@ -60,8 +58,8 @@ class DriveInfo {
     // This class contains the information for a single drive.
 
   public:
-    DriveInfo (unsigned short _driveIndex /* in [0,26) */)
-      : driveIndex {_driveIndex},
+    DriveInfo (wchar_t _driveLetter /* in [L'A', L'Z'] */)
+      : driveIndex {_driveLetter - L'A'},
         drive {L"_:\\"},
         driveNoSlash {L"_:"}
     {
@@ -346,20 +344,18 @@ class DriveInfo {
     }
 };
 
-
-
 //======================================================================================================================
 
 class CommandOptions {
     // This class stores and manages all command line options.
 
   public:
-    wstring        programName;               // Name of executable
-    bool           printVersion {false};      // True => Print program version
-    bool           printHelp {false};         // True => print help information
-    bool           printVerbose {false};      // True => Print verbose; include additional information
-    bool           printJSON {false};         // True => print results in JSON format
-    unsigned short singleDriveIndex {DriveIndexNone};  // Specified single drive, else null
+    wstring        programName;           // Name of executable
+    bool           printVersion {false};  // True => Print program version
+    bool           printHelp {false};     // True => print help information
+    bool           printVerbose {false};  // True => Print verbose; include additional information
+    bool           printJSON {false};     // True => print results in JSON format
+    wchar_t        singleDrive {0};       // Specified single drive ('A'-'Z'), else 0
 
     CommandOptions() {}
 
@@ -383,10 +379,10 @@ class CommandOptions {
 
                 const bool driveLetterInRange =  ((L'A' <= token[0]) && (token[0] <= L'Z'))
                                               || ((L'a' <= token[0]) && (token[0] <= L'z'));
-                const bool driveStringTailValid = (token[1] == 0) || (token[1] == L':');
+                const bool driveStringTailValid = (token[1] == 0 || token[1] == L':');
 
                 if (driveLetterInRange && driveStringTailValid) {
-                    singleDriveIndex = towupper(token[0]) - L'A';
+                    singleDrive = towupper(token[0]);
                 } else {
                     wcerr << programName << L": ERROR: Unexpected argument (" << token << ").\n";
                     return false;
@@ -453,22 +449,22 @@ void PrintResultsHuman(const CommandOptions& options, DriveInfo* driveInfo[], in
     size_t maxLenVolumeLabel {0};
     size_t maxLenDriveDesc {0};
 
-    unsigned int minDrive{0}, maxDrive{0};
-    if (options.singleDriveIndex != DriveIndexNone)
-        minDrive = maxDrive = options.singleDriveIndex;
+    wchar_t minDrive, maxDrive;
+    if (options.singleDrive)
+        minDrive = maxDrive = options.singleDrive;
     else {
-        minDrive = minDriveIndex;
-        maxDrive = maxDriveIndex;
+        minDrive = L'A';
+        maxDrive = L'Z';
     }
 
-    for (auto driveIndex = minDrive;  driveIndex <= maxDrive;  ++driveIndex) {
-        if (DriveValid(logicalDrives, driveIndex))
-            driveInfo[driveIndex]->GetMaxFieldLengths(maxLenVolumeLabel, maxLenDriveDesc);
+    for (auto driveLetter = minDrive;  driveLetter <= maxDrive;  ++driveLetter) {
+        if (DriveValid(logicalDrives, driveLetter))
+            driveInfo[driveLetter-L'A']->GetMaxFieldLengths(maxLenVolumeLabel, maxLenDriveDesc);
     }
 
-    for (auto driveIndex = minDrive;  driveIndex <= maxDrive;  ++driveIndex) {
-        if (DriveValid(logicalDrives, driveIndex)) {
-            driveInfo[driveIndex]->
+    for (auto driveLetter = minDrive;  driveLetter <= maxDrive;  ++driveLetter) {
+        if (DriveValid(logicalDrives, driveLetter)) {
+            driveInfo[driveLetter - L'A']->
                 PrintVolumeInformation(options.printVerbose, maxLenVolumeLabel, maxLenDriveDesc);
         }
     }
@@ -476,18 +472,18 @@ void PrintResultsHuman(const CommandOptions& options, DriveInfo* driveInfo[], in
 
 
 void PrintResultsJSON(const CommandOptions& options, DriveInfo* driveInfo[], int logicalDrives) {
-    unsigned int minDrive{0}, maxDrive{0};
+    wchar_t minDrive, maxDrive;
 
-    if (options.singleDriveIndex != DriveIndexNone)
-        minDrive = maxDrive = options.singleDriveIndex;
+    if (options.singleDrive)
+        minDrive = maxDrive = options.singleDrive;
     else {
-        minDrive = minDriveIndex;
-        maxDrive = maxDriveIndex;
+        minDrive = L'A';
+        maxDrive = L'Z';
     }
 
-    for (auto driveIndex = minDrive;  driveIndex <= maxDrive;  ++driveIndex) {
-        if (DriveValid(logicalDrives, driveIndex))
-            driveInfo[driveIndex]->PrintJSONVolumeInformation();
+    for (auto driveLetter = minDrive;  driveLetter <= maxDrive;  ++driveLetter) {
+        if (DriveValid(logicalDrives, driveLetter))
+            driveInfo[driveLetter - L'A']->PrintJSONVolumeInformation();
     }
 }
 
@@ -549,27 +545,25 @@ int wmain (int argc, wchar_t* argv[]) {
 
     // Handle single-drive reporting.
 
-    unsigned int minDrive{0}, maxDrive{maxDriveIndex};
+    wchar_t minDrive{L'A'}, maxDrive{L'Z'};
 
-    if (commandOptions.singleDriveIndex != DriveIndexNone) {
-        if (!DriveValid(logicalDrives, commandOptions.singleDriveIndex)) {
-            wchar_t driveLetter = L'A' + commandOptions.singleDriveIndex;
+    if (commandOptions.singleDrive) {
+        if (!DriveValid(logicalDrives, commandOptions.singleDrive)) {
+            wchar_t driveLetter = commandOptions.singleDrive;
             wcout << commandOptions.programName << L": No volume present at drive " << driveLetter << L":." << endl;
             exit(1);
         }
-        minDrive = maxDrive = commandOptions.singleDriveIndex;
+        minDrive = maxDrive = commandOptions.singleDrive;
     }
 
     // Query all drives for volume information, and get maximum field lengths.
 
-    unsigned short driveIndex;    // Drive numerical index, [0,26).
-
-    for (driveIndex = minDrive;  driveIndex <= maxDrive;  ++driveIndex) {
-        if (DriveValid(logicalDrives, driveIndex)) {
-            driveInfo[driveIndex] = new DriveInfo(driveIndex);
-            driveInfo[driveIndex]->LoadVolumeInformation (commandOptions.programName, driveSubstitutions);
+    for (auto driveLetter = minDrive;  driveLetter <= maxDrive;  ++driveLetter) {
+        if (DriveValid(logicalDrives, driveLetter)) {
+            driveInfo[driveLetter - L'A'] = new DriveInfo(driveLetter);
+            driveInfo[driveLetter - L'A']->LoadVolumeInformation (commandOptions.programName, driveSubstitutions);
         } else {
-            driveInfo[driveIndex] = nullptr;
+            driveInfo[driveLetter - L'A'] = nullptr;
         }
     }
 
@@ -581,7 +575,7 @@ int wmain (int argc, wchar_t* argv[]) {
         PrintResultsHuman(commandOptions, driveInfo, logicalDrives);
 
     // Cleanup
-    for (driveIndex = minDriveIndex;  driveIndex <= maxDriveIndex;  ++driveIndex) {
-        delete driveInfo[driveIndex];
+    for (auto driveLetter = minDrive;  driveLetter <= maxDrive;  ++driveLetter) {
+        delete driveInfo[driveLetter - L'A'];
     }
 }
