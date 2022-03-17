@@ -68,7 +68,6 @@ class DriveInfo {
 
     ~DriveInfo() {}
 
-
     void LoadVolumeInformation (wstring programName, wstring driveSubstitutions[NumPossibleDrives]) {
 
         // Loads the volume information for this drive. Note that the drive letter was passed in at construction.
@@ -104,45 +103,6 @@ class DriveInfo {
 
         GetNetworkMap();
     }
-
-
-    static void GetDriveSubstitutions (wstring programName, wstring (&substitutions)[NumPossibleDrives]) {
-        // Get information on any substitutions for this drive.
-
-        // Execute the 'subst' command to scrape existing drive substitutions.
-        FILE *results = _wpopen (L"subst", L"rt");
-        if (!results) {
-            wcerr << programName << L": ERROR: 'subst' command failed." << endl;
-            return;
-        }
-
-        // Parse the output line-by-line to get each substitution.
-        wchar_t buffer[4096];
-
-        while (!feof(results)) {
-            if (fgetws (buffer, sizeof(buffer), results) == nullptr)
-                continue;
-
-            // Scan past the "X:\ => " leader.
-            auto ptr = buffer;
-            while (*ptr && *ptr != L'>')
-                ++ptr;
-
-            if (*++ptr != L' ') continue;
-            ++ptr;
-
-            // Trim the trailing end-of-line characters.
-            wstring sub = ptr;
-            sub.erase (sub.find_last_not_of(L" \n\r\t") + 1);
-
-            // Save off the substitution target.
-            unsigned short driveIndex = buffer[0] - L'A';
-            substitutions[driveIndex] = sub;
-        }
-
-        _pclose(results);
-    }
-
 
     void GetNetworkMap() {
         // Get the network-mapped connection, if any.
@@ -182,14 +142,12 @@ class DriveInfo {
         delete[] netMapBuffer;
     }
 
-
     void GetMaxFieldLengths (size_t &maxLenVolumeLabel, size_t &maxLenDriveDesc) {
         // Computes the maximum field lengths, incorporating the length of this drive's fields.
 
         maxLenVolumeLabel = max (maxLenVolumeLabel, volumeLabel.length());
         maxLenDriveDesc   = max (maxLenDriveDesc,   driveDesc.length());
     }
-
 
     void PrintVolumeInformation (bool verbose, size_t maxLenVolumeLabel, size_t maxLenDriveDesc) {
         // Prints human-readable volume information for this drive.
@@ -253,7 +211,6 @@ class DriveInfo {
 
         wcout << endl;
     }
-
 
     void PrintJSONVolumeInformation() {
         // Prints volume information in JSON format.
@@ -325,7 +282,6 @@ class DriveInfo {
             wcout << "\"" << netMap << "\"\n";
     }
 
-
   private:   // Helper Methods
 
     static wstring DriveDesc (UINT type) {
@@ -343,6 +299,45 @@ class DriveInfo {
         return L"Unknown";
     }
 };
+
+//======================================================================================================================
+
+void GetDriveSubstitutions (wstring programName, wstring (&substitutions)[NumPossibleDrives]) {
+    // Get information on any substitutions for this drive.
+
+    // Execute the 'subst' command to scrape existing drive substitutions.
+    FILE *results = _wpopen (L"subst", L"rt");
+    if (!results) {
+        wcerr << programName << L": ERROR: 'subst' command failed." << endl;
+        return;
+    }
+
+    // Parse the output line-by-line to get each substitution.
+    wchar_t buffer[4096];
+
+    while (!feof(results)) {
+        if (fgetws (buffer, sizeof(buffer), results) == nullptr)
+            continue;
+
+        // Scan past the "X:\ => " leader.
+        auto ptr = buffer;
+        while (*ptr && *ptr != L'>')
+            ++ptr;
+
+        if (*++ptr != L' ') continue;
+        ++ptr;
+
+        // Trim the trailing end-of-line characters.
+        wstring sub = ptr;
+        sub.erase (sub.find_last_not_of(L" \n\r\t") + 1);
+
+        // Save off the substitution target.
+        unsigned short driveIndex = buffer[0] - L'A';
+        substitutions[driveIndex] = sub;
+    }
+
+    _pclose(results);
+}
 
 //======================================================================================================================
 
@@ -515,8 +510,6 @@ Options
 
 )";
 
-
-
 //======================================================================================================================
 
 int wmain (int argc, wchar_t* argv[]) {
@@ -541,7 +534,7 @@ int wmain (int argc, wchar_t* argv[]) {
     DriveInfo* driveInfo[NumPossibleDrives];        // Create drive info for each possible drive.
     wstring driveSubstitutions[NumPossibleDrives];  // Drive Substituttions
 
-    DriveInfo::GetDriveSubstitutions (commandOptions.programName, driveSubstitutions);
+    GetDriveSubstitutions (commandOptions.programName, driveSubstitutions);
 
     // Handle single-drive reporting.
 
