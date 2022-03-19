@@ -54,7 +54,6 @@ class DriveInfo {
     wstring  netMap;                  // If applicable, the network map associated with the drive
     wstring  subst;                   // Subst redirection
 
-
     // This class contains the information for a single drive.
 
   public:
@@ -439,6 +438,7 @@ class CommandOptions {
     }
 };
 
+//======================================================================================================================
 
 void PrintResultsHuman(const CommandOptions& options, DriveInfo* driveInfo[], int logicalDrives) {
     size_t maxLenVolumeLabel {0};
@@ -465,6 +465,7 @@ void PrintResultsHuman(const CommandOptions& options, DriveInfo* driveInfo[], in
     }
 }
 
+//======================================================================================================================
 
 void PrintResultsJSON(const CommandOptions& options, DriveInfo* driveInfo[], int logicalDrives) {
     wchar_t minDrive, maxDrive;
@@ -482,6 +483,7 @@ void PrintResultsJSON(const CommandOptions& options, DriveInfo* driveInfo[], int
     }
 }
 
+//======================================================================================================================
 
 wchar_t* helpText = LR"(
 drives: Print Windows drive and volume information
