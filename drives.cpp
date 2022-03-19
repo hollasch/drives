@@ -16,6 +16,7 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
+#include <vector>
 
 using namespace std;
 
@@ -24,6 +25,106 @@ const auto programVersion = L"drives 3.0.0-alpha.1 | 2021-04-21 | https://github
 
 const unsigned short NumPossibleDrives {26}; // Number of Possible Drives
 
+
+//======================================================================================================================
+
+class CommandOptions {
+    // This class stores and manages all command line options.
+
+  public:
+    wstring        programName;           // Name of executable
+    bool           printVersion {false};  // True => Print program version
+    bool           printHelp {false};     // True => print help information
+    bool           printVerbose {false};  // True => Print verbose; include additional information
+    bool           printJSON {false};     // True => print results in JSON format
+    wchar_t        singleDrive {0};       // Specified single drive ('A'-'Z'), else 0
+
+    CommandOptions() {}
+
+    bool parseArguments (int argCount, wchar_t* argTokens[]) {
+        // Parse the command line into the individual command options.
+
+        programName = argTokens[0];
+
+        for (int argIndex = 1;  argIndex < argCount;  ++argIndex) {
+            auto token = argTokens[argIndex];
+
+            if (token[0] == L'/' && token[1] == L'?' && token[2] == 0) {
+                printHelp = true;
+                continue;
+            }
+
+            if (token[0] != L'-') {
+                // Non switches
+
+                // Allowable drive formats: 'X', 'X:.*'.
+
+                const bool driveLetterInRange =  ((L'A' <= token[0]) && (token[0] <= L'Z'))
+                                              || ((L'a' <= token[0]) && (token[0] <= L'z'));
+                const bool driveStringTailValid = (token[1] == 0 || token[1] == L':');
+
+                if (driveLetterInRange && driveStringTailValid) {
+                    singleDrive = towupper(token[0]);
+                } else {
+                    wcerr << programName << L": ERROR: Unexpected argument (" << token << ").\n";
+                    return false;
+                }
+
+            } else if (0 == wcsncmp(token, L"--", wcslen(L"--"))) {
+
+                wstring tokenString {token};
+
+                // Double-dash switches
+
+                if (tokenString == L"--help")
+                    printHelp = true;
+                else if (tokenString == L"--json")
+                    printJSON = true;
+                else if (tokenString == L"--verbose")
+                    printVerbose = true;
+                else if (tokenString == L"--version")
+                    printVersion = true;
+                else {
+                    wcerr << programName << L": ERROR: Unrecognized option (" << token << L").\n";
+                    return false;
+                }
+
+            } else {
+
+                // Single letter switches
+
+                if (!token[1]) {
+                    wcerr << programName << L": ERROR: Missing option letter for '" << token[0] << L"'.\n";
+                    return false;
+                }
+                ++token;
+
+                do switch(*token) {
+                    case L'h': case L'H': case L'?':
+                        printHelp = true;
+                        break;
+
+                    case L'j': case L'J':
+                        printJSON = true;
+                        break;
+
+                    case L'v': case L'V':
+                        printVerbose = true;
+                        break;
+
+                    default:
+                        wcerr << programName << L": ERROR: Unrecognized option (" << *token << L").\n";
+                        return false;
+
+                } while (*++token);
+            }
+        }
+
+        printVersion = printVersion || printHelp;
+
+        return true;
+    }
+};
 
 //======================================================================================================================
 
@@ -141,17 +242,19 @@ class DriveInfo {
         delete[] netMapBuffer;
     }
 
-    void GetMaxFieldLengths (size_t &maxLenVolumeLabel, size_t &maxLenDriveDesc) {
+    void GetMaxFieldLengths (size_t &maxLenVolumeLabel, size_t &maxLenDriveDesc) const {
         // Computes the maximum field lengths, incorporating the length of this drive's fields.
 
         maxLenVolumeLabel = max (maxLenVolumeLabel, volumeLabel.length());
         maxLenDriveDesc   = max (maxLenDriveDesc,   driveDesc.length());
     }
 
-    void PrintVolumeInformation (bool verbose, size_t maxLenVolumeLabel, size_t maxLenDriveDesc) {
+    void PrintVolumeInformation (
+        const CommandOptions& options, size_t maxLenVolumeLabel, size_t maxLenDriveDesc
+    ) const {
         // Prints human-readable volume information for this drive.
         //
-        // verbose:            True => print additional volume information.
+        // options:            Program options
         // maxLenVolumeLabel:  Maximum string length for all volume labels.
         // maxLenDriveDesc:    Maximum string length for all drive type strings.
 
@@ -205,13 +308,13 @@ class DriveInfo {
             wcout << L"--> " << netMap;
 
         // Print additional information if requested.
-        if (verbose && volumeName.length())
+        if (options.printVerbose && volumeName.length())
             wcout << L"\n   " << volumeName << "\n";
 
         wcout << endl;
     }
 
-    void PrintJSONVolumeInformation() {
+    void PrintJSONVolumeInformation() const {
         // Prints volume information in JSON format.
 
         wcout << driveNoSlash << L"driveType: \"" << driveDesc << L"\"\n";
@@ -228,7 +331,7 @@ class DriveInfo {
             wcout << driveNoSlash << L"fileSystem: \"" << fileSysName << "\"\n";
             wcout << driveNoSlash << L"fileSysFlags: " <<hex <<setw(8) <<setfill(L'0') << fileSysFlags <<dec;
 
-            auto flagPrint = [](DriveInfo* info, wstring desc, DWORD flag) {
+            auto flagPrint = [](const DriveInfo* info, wstring desc, DWORD flag) {
                 wcout << info->driveNoSlash << desc << L": " << ((info->fileSysFlags & flag) != 0) << "\n";
             };
 
@@ -340,147 +443,22 @@ void GetDriveSubstitutions (wstring programName, wstring (&substitutions)[NumPos
 
 //======================================================================================================================
 
-class CommandOptions {
-    // This class stores and manages all command line options.
-
-  public:
-    wstring        programName;           // Name of executable
-    bool           printVersion {false};  // True => Print program version
-    bool           printHelp {false};     // True => print help information
-    bool           printVerbose {false};  // True => Print verbose; include additional information
-    bool           printJSON {false};     // True => print results in JSON format
-    wchar_t        singleDrive {0};       // Specified single drive ('A'-'Z'), else 0
-
-    CommandOptions() {}
-
-    bool parseArguments (int argCount, wchar_t* argTokens[]) {
-        // Parse the command line into the individual command options.
-
-        programName = argTokens[0];
-
-        for (int argIndex = 1;  argIndex < argCount;  ++argIndex) {
-            auto token = argTokens[argIndex];
-
-            if (token[0] == L'/' && token[1] == L'?' && token[2] == 0) {
-                printHelp = true;
-                continue;
-            }
-
-            if (token[0] != L'-') {
-                // Non switches
-
-                // Allowable drive formats: 'X', 'X:.*'.
-
-                const bool driveLetterInRange =  ((L'A' <= token[0]) && (token[0] <= L'Z'))
-                                              || ((L'a' <= token[0]) && (token[0] <= L'z'));
-                const bool driveStringTailValid = (token[1] == 0 || token[1] == L':');
-
-                if (driveLetterInRange && driveStringTailValid) {
-                    singleDrive = towupper(token[0]);
-                } else {
-                    wcerr << programName << L": ERROR: Unexpected argument (" << token << ").\n";
-                    return false;
-                }
-
-            } else if (0 == wcsncmp(token, L"--", wcslen(L"--"))) {
-
-                wstring tokenString {token};
-
-                // Double-dash switches
-
-                if (tokenString == L"--help")
-                    printHelp = true;
-                else if (tokenString == L"--json")
-                    printJSON = true;
-                else if (tokenString == L"--verbose")
-                    printVerbose = true;
-                else if (tokenString == L"--version")
-                    printVersion = true;
-                else {
-                    wcerr << programName << L": ERROR: Unrecognized option (" << token << L").\n";
-                    return false;
-                }
-
-            } else {
-
-                // Single letter switches
-
-                if (!token[1]) {
-                    wcerr << programName << L": ERROR: Missing option letter for '" << token[0] << L"'.\n";
-                    return false;
-                }
-                ++token;
-
-                do switch(*token) {
-                    case L'h': case L'H': case L'?':
-                        printHelp = true;
-                        break;
-
-                    case L'j': case L'J':
-                        printJSON = true;
-                        break;
-
-                    case L'v': case L'V':
-                        printVerbose = true;
-                        break;
-
-                    default:
-                        wcerr << programName << L": ERROR: Unrecognized option (" << *token << L").\n";
-                        return false;
-
-                } while (*++token);
-            }
-        }
-
-        printVersion = printVersion || printHelp;
-
-        return true;
-    }
-};
-
-//======================================================================================================================
-
-void PrintResultsHuman(const CommandOptions& options, DriveInfo* driveInfo[], int logicalDrives) {
+void PrintResultsHuman(const CommandOptions& options, vector<DriveInfo>& drives, int logicalDrives) {
     size_t maxLenVolumeLabel {0};
     size_t maxLenDriveDesc {0};
 
-    wchar_t minDrive, maxDrive;
-    if (options.singleDrive)
-        minDrive = maxDrive = options.singleDrive;
-    else {
-        minDrive = L'A';
-        maxDrive = L'Z';
-    }
+    for (const auto& drive : drives)
+        drive.GetMaxFieldLengths(maxLenVolumeLabel, maxLenDriveDesc);
 
-    for (auto driveLetter = minDrive;  driveLetter <= maxDrive;  ++driveLetter) {
-        if (DriveValid(logicalDrives, driveLetter))
-            driveInfo[driveLetter-L'A']->GetMaxFieldLengths(maxLenVolumeLabel, maxLenDriveDesc);
-    }
-
-    for (auto driveLetter = minDrive;  driveLetter <= maxDrive;  ++driveLetter) {
-        if (DriveValid(logicalDrives, driveLetter)) {
-            driveInfo[driveLetter - L'A']->
-                PrintVolumeInformation(options.printVerbose, maxLenVolumeLabel, maxLenDriveDesc);
-        }
-    }
+    for (const auto& drive : drives)
+        drive.PrintVolumeInformation(options, maxLenVolumeLabel, maxLenDriveDesc);
 }
 
 //======================================================================================================================
 
-void PrintResultsJSON(const CommandOptions& options, DriveInfo* driveInfo[], int logicalDrives) {
-    wchar_t minDrive, maxDrive;
-
-    if (options.singleDrive)
-        minDrive = maxDrive = options.singleDrive;
-    else {
-        minDrive = L'A';
-        maxDrive = L'Z';
-    }
-
-    for (auto driveLetter = minDrive;  driveLetter <= maxDrive;  ++driveLetter) {
-        if (DriveValid(logicalDrives, driveLetter))
-            driveInfo[driveLetter - L'A']->PrintJSONVolumeInformation();
-    }
+void PrintResultsJSON(const CommandOptions& options, vector<DriveInfo>& drives, int logicalDrives) {
+    for (const auto& drive : drives)
+        drive.PrintJSONVolumeInformation();
 }
 
 //======================================================================================================================
@@ -532,8 +510,8 @@ int wmain (int argc, wchar_t* argv[]) {
         exit(0);
     }
 
-    int logicalDrives = GetLogicalDrives();        // Query system logical drives.
-    DriveInfo* driveInfo[NumPossibleDrives];        // Create drive info for each possible drive.
+    int logicalDrives = GetLogicalDrives();         // Query system logical drives.
+    vector<DriveInfo> drives;
     wstring driveSubstitutions[NumPossibleDrives];  // Drive Substituttions
 
     GetDriveSubstitutions (commandOptions.programName, driveSubstitutions);
@@ -554,23 +532,18 @@ int wmain (int argc, wchar_t* argv[]) {
     // Query all drives for volume information, and get maximum field lengths.
 
     for (auto driveLetter = minDrive;  driveLetter <= maxDrive;  ++driveLetter) {
-        if (DriveValid(logicalDrives, driveLetter)) {
-            driveInfo[driveLetter - L'A'] = new DriveInfo(driveLetter);
-            driveInfo[driveLetter - L'A']->LoadVolumeInformation (commandOptions.programName, driveSubstitutions);
-        } else {
-            driveInfo[driveLetter - L'A'] = nullptr;
-        }
+        if (!DriveValid(logicalDrives, driveLetter))
+            continue;
+
+        auto driveInfo = new DriveInfo{driveLetter};
+        driveInfo->LoadVolumeInformation(commandOptions.programName, driveSubstitutions);
+        drives.push_back(*driveInfo);
     }
 
     // For each drive, print volume information.
 
     if (commandOptions.printJSON)
-        PrintResultsJSON(commandOptions, driveInfo, logicalDrives);
+        PrintResultsJSON(commandOptions, drives, logicalDrives);
     else
-        PrintResultsHuman(commandOptions, driveInfo, logicalDrives);
-
-    // Cleanup
-    for (auto driveLetter = minDrive;  driveLetter <= maxDrive;  ++driveLetter) {
-        delete driveInfo[driveLetter - L'A'];
-    }
+        PrintResultsHuman(commandOptions, drives, logicalDrives);
 }
