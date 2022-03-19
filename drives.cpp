@@ -135,6 +135,19 @@ bool DriveValid (DWORD logicalDrives, wchar_t driveLetter) {
 
 //======================================================================================================================
 
+wstring escaped(const wstring& source) {
+    // Return the source string with backslashes escaped ("\" -> "\\")
+    wstring result;
+    for (auto c : source) {
+        if (c == '\\')
+            result += '\\';
+        result += c;
+    }
+    return result;
+}
+
+//======================================================================================================================
+
 class DriveInfo {
   private:
 
@@ -314,74 +327,76 @@ class DriveInfo {
         wcout << endl;
     }
 
-    void PrintJSONVolumeInformation() const {
+    void PrintJSONVolumeInformation(bool first) const {
         // Prints volume information in JSON format.
 
-        wcout << driveNoSlash << L"driveType: \"" << driveDesc << L"\"\n";
+        if (!first)
+            wcout << ",\n";
+
+        wcout << "  {\n";
+
+        wcout << L"    \"driveType\": \"" << driveDesc << L"\",\n";
 
         if (isVolInfoValid) {
-            wcout << driveNoSlash << L"label: \"" << volumeLabel << L"\"\n";
+            wcout << L"    \"label\": \"" << escaped(volumeLabel) << L"\",\n";
 
-            wcout << driveNoSlash << L"serialNumber: \"" << hex;
+            wcout << L"    \"serialNumber\": \"" << hex;
             wcout << setw(4) << setfill(L'0') << (serialNumber >> 16) << L'-';
             wcout << setw(4) << setfill(L'0') << (serialNumber & 0xffff);
-            wcout << dec << L"\"\n";
+            wcout << dec << L"\",\n";
 
-            wcout << driveNoSlash << L"maxComponentLength: " << maxComponentLength << "\n";
-            wcout << driveNoSlash << L"fileSystem: \"" << fileSysName << "\"\n";
-            wcout << driveNoSlash << L"fileSysFlags: " <<hex <<setw(8) <<setfill(L'0') << fileSysFlags <<dec;
+            wcout << L"    \"maxComponentLength\": " << maxComponentLength << ",\n";
+            wcout << L"    \"fileSystem\": \"" << fileSysName << "\",\n";
+            wcout << L"    \"fileSysFlagsValue\": \"0x"
+                <<hex <<setw(8) <<setfill(L'0') << fileSysFlags <<dec <<"\",\n";
 
-            auto flagPrint = [](const DriveInfo* info, wstring desc, DWORD flag) {
-                wcout << info->driveNoSlash << desc << L": " << ((info->fileSysFlags & flag) != 0) << "\n";
+            wcout << L"    \"fileSysFlags\": {\n";
+            bool first = true;
+            auto flagPrint = [&first](const DriveInfo* info, wstring desc, DWORD flag) {
+                if (!first) wcout << ",\n";
+                wcout << L"      \"" << desc << "\": " << ((info->fileSysFlags & flag) != 0);
+                first = false;
             };
 
-            flagPrint (this, L"flagFileNamedStreams", FILE_NAMED_STREAMS);
-            flagPrint (this, L"flagFileSupportsObjectIDs", FILE_SUPPORTS_OBJECT_IDS);
+            flagPrint (this, L"flagFileNamedStreams",          FILE_NAMED_STREAMS);
+            flagPrint (this, L"flagFileSupportsObjectIDs",     FILE_SUPPORTS_OBJECT_IDS);
             flagPrint (this, L"flagFileSupportsReparsePoints", FILE_SUPPORTS_REPARSE_POINTS);
-            flagPrint (this, L"flagFileSupportsSparseFiles", FILE_SUPPORTS_SPARSE_FILES);
-            flagPrint (this, L"flagFileVolumeQuotas", FILE_VOLUME_QUOTAS);
-            flagPrint (this, L"flagFSCaseSensitive", FS_CASE_SENSITIVE);
-            flagPrint (this, L"flagFSFileCompression", FS_FILE_COMPRESSION);
-            flagPrint (this, L"flagFSFileEncryption", FS_FILE_ENCRYPTION);
-            flagPrint (this, L"flagFSUnicodeStoredOnDisk", FS_UNICODE_STORED_ON_DISK);
-            flagPrint (this, L"flagFSCaseIsPreserved", FS_CASE_IS_PRESERVED);
-            flagPrint (this, L"flagFSPersistentACLs", FS_PERSISTENT_ACLS);
-            flagPrint (this, L"flagFSVolIsCompressed", FS_VOL_IS_COMPRESSED);
+            flagPrint (this, L"flagFileSupportsSparseFiles",   FILE_SUPPORTS_SPARSE_FILES);
+            flagPrint (this, L"flagFileVolumeQuotas",          FILE_VOLUME_QUOTAS);
+            flagPrint (this, L"flagFSCaseSensitive",           FS_CASE_SENSITIVE);
+            flagPrint (this, L"flagFSFileCompression",         FS_FILE_COMPRESSION);
+            flagPrint (this, L"flagFSFileEncryption",          FS_FILE_ENCRYPTION);
+            flagPrint (this, L"flagFSUnicodeStoredOnDisk",     FS_UNICODE_STORED_ON_DISK);
+            flagPrint (this, L"flagFSCaseIsPreserved",         FS_CASE_IS_PRESERVED);
+            flagPrint (this, L"flagFSPersistentACLs",          FS_PERSISTENT_ACLS);
+            flagPrint (this, L"flagFSVolIsCompressed",         FS_VOL_IS_COMPRESSED);
+
+            wcout << L"\n    },\n";
 
         } else {
 
-            wcout << driveNoSlash << L"label: null\n";
-            wcout << driveNoSlash << L"serialNumber: null\n";
-            wcout << driveNoSlash << L"maxComponentLength: null\n";
-            wcout << driveNoSlash << L"fileSystem: null\n";
-            wcout << driveNoSlash << L"fileSysFlags: null\n";
-            wcout << driveNoSlash << L"flagFileNamedStreams: null\n";
-            wcout << driveNoSlash << L"flagFileSupportsObjectIDs: null\n";
-            wcout << driveNoSlash << L"flagFileSupportsReparsePoints: null\n";
-            wcout << driveNoSlash << L"flagFileSupportsSparseFiles: null\n";
-            wcout << driveNoSlash << L"flagFileVolumeQuotas: null\n";
-            wcout << driveNoSlash << L"flagFSCaseSensitive: null\n";
-            wcout << driveNoSlash << L"flagFSFileCompression: null\n";
-            wcout << driveNoSlash << L"flagFSFileEncryption: null\n";
-            wcout << driveNoSlash << L"flagFSUnicodeStoredOnDisk: null\n";
-            wcout << driveNoSlash << L"flagFSCaseIsPreserved: null\n";
-            wcout << driveNoSlash << L"flagFSPersistentACLs: null\n";
-            wcout << driveNoSlash << L"flagFSVolIsCompressed: null\n";
+            wcout << driveNoSlash << L"    \"label\": null,\n";
+            wcout << driveNoSlash << L"    \"serialNumber\": null,\n";
+            wcout << driveNoSlash << L"    \"maxComponentLength\": null,\n";
+            wcout << driveNoSlash << L"    \"fileSystem\": null,\n";
+            wcout << driveNoSlash << L"    \"fileSysFlags\": null,\n";
         }
 
-        wcout << driveNoSlash << L"name: \"" << volumeName << "\"\n";
+        wcout << L"    \"name\": \"" << escaped(volumeName) << "\",\n";
 
-        wcout << driveNoSlash << L"driveSubst: ";
+        wcout << L"    \"driveSubst\": ";
         if (!subst.length())
-            wcout << "null\n";
+            wcout << "null,\n";
         else
-            wcout << "\"" << subst << "\"\n";
+            wcout << "\"" << escaped(subst) << "\",\n";
 
-        wcout << driveNoSlash << L"netMap: ";
+        wcout << L"    \"netMap\": ";
         if (!netMap.length())
             wcout << "null\n";
         else
-            wcout << "\"" << netMap << "\"\n";
+            wcout << "\"" << escaped(netMap) << "\"\n";
+
+        wcout << "  }";
     }
 
   private:   // Helper Methods
@@ -457,8 +472,15 @@ void PrintResultsHuman(const CommandOptions& options, vector<DriveInfo>& drives,
 //======================================================================================================================
 
 void PrintResultsJSON(const CommandOptions& options, vector<DriveInfo>& drives, int logicalDrives) {
-    for (const auto& drive : drives)
-        drive.PrintJSONVolumeInformation();
+    wcout << "[\n";
+
+    bool first = true;
+    for (const auto& drive : drives) {
+        drive.PrintJSONVolumeInformation(first);
+        first = false;
+    }
+
+    wcout << "\n]" << endl;
 }
 
 //======================================================================================================================
