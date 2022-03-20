@@ -154,7 +154,7 @@ class DriveInfo {
     int      driveIndex;        // Logical drive index 0=A, 1=B, ..., 25=Z.
     wstring  drive;             // Drive string with trailing slash (for example, 'X:\').
     wstring  driveNoSlash;      // Drive string with no trailing slash ('X:').
-    wstring  driveDesc;         // Type of drive volume
+    wstring  driveType;         // Type of drive volume
 
     // Info from GetVolumeInformation
     bool     isVolInfoValid {false};  // True if we got the drive volume information.
@@ -185,7 +185,7 @@ class DriveInfo {
 
         // Loads the volume information for this drive. Note that the drive letter was passed in at construction.
 
-        driveDesc = DriveDesc (GetDriveTypeW (drive.c_str()));
+        driveType = DriveType(GetDriveTypeW (drive.c_str()));
 
         wchar_t labelBuffer   [MAX_PATH + 1];   // Buffer for volume label
         wchar_t fileSysBuffer [MAX_PATH + 1];   // Buffer for file system name
@@ -259,7 +259,7 @@ class DriveInfo {
         // Computes the maximum field lengths, incorporating the length of this drive's fields.
 
         maxLenVolumeLabel = max (maxLenVolumeLabel, volumeLabel.length());
-        maxLenDriveDesc   = max (maxLenDriveDesc,   driveDesc.length());
+        maxLenDriveDesc   = max (maxLenDriveDesc,   driveType.length());
     }
 
     void PrintVolumeInformation (
@@ -302,9 +302,9 @@ class DriveInfo {
         }
 
         // Drive Type
-        auto driveDescPadded = driveDesc;
-        driveDescPadded.append (maxLenDriveDesc - driveDesc.length(), L' ');
-        wcout << driveDescPadded;
+        auto driveTypePadded = driveType;
+        driveTypePadded.append (maxLenDriveDesc - driveType.length(), L' ');
+        wcout << driveTypePadded;
 
         // File System Type
         if (isVolInfoValid)
@@ -335,7 +335,7 @@ class DriveInfo {
 
         wcout << "  {\n";
 
-        wcout << L"    \"driveType\": \"" << driveDesc << L"\",\n";
+        wcout << L"    \"driveType\": \"" << driveType << L"\",\n";
 
         if (isVolInfoValid) {
             wcout << L"    \"label\": \"" << escaped(volumeLabel) << L"\",\n";
@@ -401,7 +401,7 @@ class DriveInfo {
 
   private:   // Helper Methods
 
-    static wstring DriveDesc (UINT type) {
+    static wstring DriveType (UINT type) {
         // Returns the string value for drive type values.
 
         switch (type) {
