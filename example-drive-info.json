@@ -1,16 +1,16 @@
 [
   {
+    "driveLetter": "A",
     "volumeName": "\\\\?\\Volume{b551ec2a-55cb-4387-b3be-7c2d1ec36f7b}\\",
     "serialNumber": "d887-3d33",
     "label": "Data",
-    "type": "Fixed",
-    "letter": "A",
-    "driveSubst": null,
-    "netMap": null,
+    "driveType": "Fixed",
+    "substituteFor": null,
+    "networkMapping": null,
     "maxComponentLength": 255,
     "fileSystem": "NTFS",
-    "fileSysFlagsValue": 03e706ff,
-    "fileSysFlags": {
+    "fileSystemFlagsValue": 03e706ff,
+    "fileSystemFlags": {
       "casePreservedNames": 0,
       "caseSensitiveSearch": 1,
       "daxVolume": 0,
@@ -41,17 +41,17 @@
     }
   },
   {
+    "driveLetter": "B",
     "volumeName": "\\\\?\\Volume{5cb20aff-93f0-4119-85b8-69595c84f1a0}\\",
     "serialNumber": "f201-121b",
     "label": "Backup",
-    "type": "Fixed",
-    "letter": "B",
-    "driveSubst": null,
-    "netMap": null,
+    "driveType": "Fixed",
+    "substituteFor": null,
+    "networkMapping": null,
     "maxComponentLength": 255,
     "fileSystem": "NTFS",
-    "fileSysFlagsValue": 03e706ff,
-    "fileSysFlags": {
+    "fileSystemFlagsValue": 03e706ff,
+    "fileSystemFlags": {
       "casePreservedNames": 0,
       "caseSensitiveSearch": 1,
       "daxVolume": 0,
@@ -82,18 +82,18 @@
     }
   },
   {
+    "driveLetter": "C",
     "volumeName": "\\\\?\\Volume{0ffd7ca4-4037-4f05-ba03-72252583a404}\\",
     "serialNumber": "ba0b-7638",
     "label": "System",
-    "type": "Fixed",
-    "letter": "C",
-    "driveSubst": null,
-    "netMap": null,
+    "driveType": "Fixed",
+    "substituteFor": null,
+    "networkMapping": null,
     "maxComponentLength": 255,
     "fileSystem": "NTFS",
-    "fileSysFlagsValue": 03e706ff,
+    "fileSystemFlagsValue": 03e706ff,
     "fileNamedStreams": 1,
-    "fileSysFlags": {
+    "fileSystemFlags": {
       "casePreservedNames": 0,
       "caseSensitiveSearch": 1,
       "daxVolume": 0,
@@ -124,17 +124,17 @@
     }
   },
   {
+    "driveLetter": "G",
     "volumeName": "\\\\?\\Volume{db7cf80e-0000-0000-0000-100000000000}\\",
     "serialNumber": "decb-9c3e",
     "label": "Games",
-    "type": "Fixed",
-    "letter": "G",
-    "driveSubst": null,
-    "netMap": null,
+    "driveType": "Fixed",
+    "substituteFor": null,
+    "networkMapping": null,
     "maxComponentLength": 255,
     "fileSystem": "NTFS",
-    "fileSysFlagsValue": 03e706ff,
-    "fileSysFlags": {
+    "fileSystemFlagsValue": 03e706ff,
+    "fileSystemFlags": {
       "casePreservedNames": 0,
       "caseSensitiveSearch": 1,
       "daxVolume": 0,
@@ -165,17 +165,17 @@
     }
   },
   {
+    "driveLetter": "S",
     "volumeName": "\\\\?\\Volume{be29e404-5968-4dfa-b558-4fafd16d0bca}\\",
     "serialNumber": "1033-2bad",
     "label": "Scratch",
-    "type": "Fixed",
-    "letter": "S",
-    "driveSubst": null,
-    "netMap": null,
+    "driveType": "Fixed",
+    "substituteFor": null,
+    "networkMapping": null,
     "maxComponentLength": 255,
     "fileSystem": "NTFS",
-    "fileSysFlagsValue": 03e706ff,
-    "fileSysFlags": {
+    "fileSystemFlagsValue": 03e706ff,
+    "fileSystemFlags": {
       "casePreservedNames": 0,
       "caseSensitiveSearch": 1,
       "daxVolume": 0,
@@ -206,17 +206,17 @@
     }
   },
   {
+    "driveLetter": "V",
     "volumeName": "",
     "serialNumber": "2f6a-151f",
     "label": "vault",
-    "type": "Remote",
-    "letter": "V",
-    "driveSubst": null,
-    "netMap": "\\\\hollnas\\vault",
+    "driveType": "Remote",
+    "substituteFor": null,
+    "networkMapping": "\\\\hollnas\\vault",
     "maxComponentLength": 255,
     "fileSystem": "NTFS",
-    "fileSysFlagsValue": 0005006f,
-    "fileSysFlags": {
+    "fileSystemFlagsValue": 0005006f,
+    "fileSystemFlags": {
       "casePreservedNames": 0,
       "caseSensitiveSearch": 1,
       "daxVolume": 0,

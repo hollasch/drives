@@ -151,6 +151,7 @@ wstring escaped(const wstring& source) {
 class DriveInfo {
   private:
 
+    wchar_t  driveLetter;       // Assigned drive letter ['A' .. 'Z']
     int      driveIndex;        // Logical drive index 0=A, 1=B, ..., 25=Z.
     wstring  drive;             // Drive string with trailing slash (for example, 'X:\').
     wstring  driveNoSlash;      // Drive string with no trailing slash ('X:').
@@ -172,7 +173,8 @@ class DriveInfo {
 
   public:
     DriveInfo (wchar_t _driveLetter /* in [L'A', L'Z'] */)
-      : driveIndex {_driveLetter - L'A'},
+      : driveLetter{_driveLetter},
+        driveIndex {_driveLetter - L'A'},
         drive {L"_:\\"},
         driveNoSlash {L"_:"}
     {
@@ -335,22 +337,41 @@ class DriveInfo {
 
         wcout << "  {\n";
 
-        wcout << L"    \"driveType\": \"" << driveType << L"\",\n";
+        wcout << L"    \"driveLetter\": \"" << driveLetter << "\",\n";
+        wcout << L"    \"volumeName\": \"" << escaped(volumeName) << "\",\n";
 
         if (isVolInfoValid) {
-            wcout << L"    \"label\": \"" << escaped(volumeLabel) << L"\",\n";
-
             wcout << L"    \"serialNumber\": \"" << hex;
             wcout << setw(4) << setfill(L'0') << (serialNumber >> 16) << L'-';
             wcout << setw(4) << setfill(L'0') << (serialNumber & 0xffff);
             wcout << dec << L"\",\n";
+            wcout << L"    \"label\": \"" << escaped(volumeLabel) << L"\",\n";
+        } else {
+            wcout << L"    \"serialNumber\": null,\n";
+            wcout << L"    \"label\": null,\n";
+        }
 
+        wcout << L"    \"driveType\": \"" << driveType << L"\",\n";
+
+        wcout << L"    \"substituteFor\": ";
+        if (!subst.length())
+            wcout << "null,\n";
+        else
+            wcout << "\"" << escaped(subst) << "\",\n";
+
+        wcout << L"    \"networkMapping\": ";
+        if (!netMap.length())
+            wcout << "null\n";
+        else
+            wcout << "\"" << escaped(netMap) << "\"\n";
+
+        if (isVolInfoValid) {
             wcout << L"    \"maxComponentLength\": " << maxComponentLength << ",\n";
             wcout << L"    \"fileSystem\": \"" << fileSysName << "\",\n";
-            wcout << L"    \"fileSysFlagsValue\": \"0x"
+            wcout << L"    \"fileSystemFlagsValue\": \"0x"
                 <<hex <<setw(8) <<setfill(L'0') << fileSysFlags <<dec <<"\",\n";
 
-            wcout << L"    \"fileSysFlags\": {\n";
+            wcout << L"    \"fileSystemFlags\": {\n";
             bool first = true;
             auto flagPrint = [&first](const DriveInfo* info, wstring desc, DWORD flag) {
                 if (!first) wcout << ",\n";
@@ -374,27 +395,11 @@ class DriveInfo {
             wcout << L"\n    },\n";
 
         } else {
-
-            wcout << driveNoSlash << L"    \"label\": null,\n";
-            wcout << driveNoSlash << L"    \"serialNumber\": null,\n";
-            wcout << driveNoSlash << L"    \"maxComponentLength\": null,\n";
-            wcout << driveNoSlash << L"    \"fileSystem\": null,\n";
-            wcout << driveNoSlash << L"    \"fileSysFlags\": null,\n";
+            wcout << L"    \"maxComponentLength\": null,\n";
+            wcout << L"    \"fileSystem\": null,\n";
+            wcout << L"    \"fileSystemFlagsValue\": 0,\n";
+            wcout << L"    \"fileSystemFlags\": null\n";
         }
-
-        wcout << L"    \"name\": \"" << escaped(volumeName) << "\",\n";
-
-        wcout << L"    \"driveSubst\": ";
-        if (!subst.length())
-            wcout << "null,\n";
-        else
-            wcout << "\"" << escaped(subst) << "\",\n";
-
-        wcout << L"    \"netMap\": ";
-        if (!netMap.length())
-            wcout << "null\n";
-        else
-            wcout << "\"" << escaped(netMap) << "\"\n";
 
         wcout << "  }";
     }
