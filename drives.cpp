@@ -148,6 +148,23 @@ wstring escaped(const wstring& source) {
 
 //======================================================================================================================
 
+wstring DriveType (UINT type) {
+    // Returns the string value for drive type values.
+
+    switch (type) {
+        case DRIVE_NO_ROOT_DIR:  return L"No root";
+        case DRIVE_REMOVABLE:    return L"Removable";
+        case DRIVE_FIXED:        return L"Fixed";
+        case DRIVE_REMOTE:       return L"Remote";
+        case DRIVE_CDROM:        return L"CD-ROM";
+        case DRIVE_RAMDISK:      return L"RAM Disk";
+    }
+
+    return L"Unknown";
+}
+
+//======================================================================================================================
+
 class DriveInfo {
   private:
 
@@ -245,8 +262,8 @@ class DriveInfo {
                 case ERROR_EXTENDED_ERROR:
                 case ERROR_NO_NET_OR_BAD_PATH:
                     netMapBuffer[0] = 0;
+                    break;
             }
-
         } while (retry);
 
         if (netMapBuffer && netMapBuffer[0])
@@ -404,22 +421,6 @@ class DriveInfo {
         wcout << "  }";
     }
 
-  private:   // Helper Methods
-
-    static wstring DriveType (UINT type) {
-        // Returns the string value for drive type values.
-
-        switch (type) {
-            case DRIVE_NO_ROOT_DIR:  return L"No root";
-            case DRIVE_REMOVABLE:    return L"Removable";
-            case DRIVE_FIXED:        return L"Fixed";
-            case DRIVE_REMOTE:       return L"Remote";
-            case DRIVE_CDROM:        return L"CD-ROM";
-            case DRIVE_RAMDISK:      return L"RAM Disk";
-        }
-
-        return L"Unknown";
-    }
 };
 
 //======================================================================================================================
