@@ -401,9 +401,9 @@ class DriveInfo {
 
         wcout << L"    \"networkMapping\": ";
         if (!netMap.length())
-            wcout << "null\n";
+            wcout << "null,\n";
         else
-            wcout << "\"" << Escape(netMap) << "\"\n";
+            wcout << "\"" << Escape(netMap) << "\",\n";
 
         if (isVolInfoValid) {
             wcout << L"    \"maxComponentLength\": " << maxComponentLength << ",\n";
@@ -432,7 +432,7 @@ class DriveInfo {
             flagPrint (this, L"flagFSPersistentACLs",          FS_PERSISTENT_ACLS);
             flagPrint (this, L"flagFSVolIsCompressed",         FS_VOL_IS_COMPRESSED);
 
-            wcout << L"\n    },\n";
+            wcout << L"\n    }\n";
 
         } else {
             wcout << L"    \"maxComponentLength\": null,\n";
