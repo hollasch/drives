@@ -165,6 +165,29 @@ wstring DriveType (UINT type) {
 
 //======================================================================================================================
 
+wstring DriveSubstitution(wchar_t driveLetter) {
+    // Returns the substitution for the given DOS drive. For example, by using the `subst` command.
+
+    WCHAR drive[] = L"_:";
+    const DWORD bufferSize = 4096;
+    WCHAR outBuffer[bufferSize];
+
+    drive[0] = driveLetter;
+
+    auto numChars = QueryDosDeviceW(drive, outBuffer, bufferSize);
+
+    // Substituted drives have a device name beginning with "\??\", followed by the full drive path.
+    // For example, if X: is a substitute for A:\users\yoda, then the device path would be
+    // "\??\A:\users\yoda".
+    if (numChars > 4 && outBuffer[0] == '\\' && outBuffer[1] == '?' && outBuffer[2] == '?' && outBuffer[3] == '\\') {
+        return {outBuffer + 4};
+    }
+
+    return {};
+}
+
+//======================================================================================================================
+
 class DriveInfo {
   private:
 
@@ -200,7 +223,7 @@ class DriveInfo {
 
     ~DriveInfo() {}
 
-    void LoadVolumeInformation (wstring programName, wstring driveSubstitutions[NumPossibleDrives]) {
+    void LoadVolumeInformation() {
 
         // Loads the volume information for this drive. Note that the drive letter was passed in at construction.
 
@@ -231,7 +254,7 @@ class DriveInfo {
         else
             volumeName.clear();
 
-        subst = driveSubstitutions[driveIndex];
+        subst = DriveSubstitution(driveLetter);
 
         GetNetworkMap();
     }
@@ -425,45 +448,6 @@ class DriveInfo {
 
 //======================================================================================================================
 
-void GetDriveSubstitutions (wstring programName, wstring (&substitutions)[NumPossibleDrives]) {
-    // Get information on any substitutions for this drive.
-
-    // Execute the 'subst' command to scrape existing drive substitutions.
-    FILE *results = _wpopen (L"subst", L"rt");
-    if (!results) {
-        wcerr << programName << L": ERROR: 'subst' command failed." << endl;
-        return;
-    }
-
-    // Parse the output line-by-line to get each substitution.
-    wchar_t buffer[4096];
-
-    while (!feof(results)) {
-        if (fgetws (buffer, sizeof(buffer), results) == nullptr)
-            continue;
-
-        // Scan past the "X:\ => " leader.
-        auto ptr = buffer;
-        while (*ptr && *ptr != L'>')
-            ++ptr;
-
-        if (*++ptr != L' ') continue;
-        ++ptr;
-
-        // Trim the trailing end-of-line characters.
-        wstring sub = ptr;
-        sub.erase (sub.find_last_not_of(L" \n\r\t") + 1);
-
-        // Save off the substitution target.
-        unsigned short driveIndex = buffer[0] - L'A';
-        substitutions[driveIndex] = sub;
-    }
-
-    _pclose(results);
-}
-
-//======================================================================================================================
-
 void PrintResultsHuman(const CommandOptions& options, vector<DriveInfo>& drives, int logicalDrives) {
     size_t maxLenVolumeLabel {0};
     size_t maxLenDriveDesc {0};
@@ -542,8 +526,6 @@ int wmain (int argc, wchar_t* argv[]) {
     vector<DriveInfo> drives;
     wstring driveSubstitutions[NumPossibleDrives];  // Drive Substituttions
 
-    GetDriveSubstitutions (commandOptions.programName, driveSubstitutions);
-
     // Handle single-drive reporting.
 
     wchar_t minDrive{L'A'}, maxDrive{L'Z'};
@@ -564,7 +546,7 @@ int wmain (int argc, wchar_t* argv[]) {
             continue;
 
         auto driveInfo = new DriveInfo{driveLetter};
-        driveInfo->LoadVolumeInformation(commandOptions.programName, driveSubstitutions);
+        driveInfo->LoadVolumeInformation();
         drives.push_back(*driveInfo);
     }
 
