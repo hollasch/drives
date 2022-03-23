@@ -32,12 +32,12 @@ class CommandOptions {
     // This class stores and manages all command line options.
 
   public:
-    wstring        programName;           // Name of executable
-    bool           printVersion {false};  // True => Print program version
-    bool           printHelp {false};     // True => print help information
-    bool           printVerbose {false};  // True => Print verbose; include additional information
-    bool           printJSON {false};     // True => print results in JSON format
-    wchar_t        singleDrive {0};       // Specified single drive ('A'-'Z'), else 0
+    wstring programName;           // Name of executable
+    bool    printVersion {false};  // True => Print program version
+    bool    printHelp {false};     // True => print help information
+    bool    printVerbose {false};  // True => Print verbose; include additional information
+    bool    printJSON {false};     // True => print results in JSON format
+    wchar_t singleDrive {0};       // Specified single drive ('A'-'Z'), else 0
 
     CommandOptions() {}
 
@@ -135,7 +135,7 @@ bool DriveValid (DWORD logicalDrives, wchar_t driveLetter) {
 
 //======================================================================================================================
 
-wstring escaped(const wstring& source) {
+wstring Escape(const wstring& source) {
     // Return the source string with backslashes escaped ("\" -> "\\")
     wstring result;
     for (auto c : source) {
@@ -191,23 +191,23 @@ wstring DriveSubstitution(wchar_t driveLetter) {
 class DriveInfo {
   private:
 
-    wchar_t  driveLetter;       // Assigned drive letter ['A' .. 'Z']
-    int      driveIndex;        // Logical drive index 0=A, 1=B, ..., 25=Z.
-    wstring  drive;             // Drive string with trailing slash (for example, 'X:\').
-    wstring  driveNoSlash;      // Drive string with no trailing slash ('X:').
-    wstring  driveType;         // Type of drive volume
+    wchar_t driveLetter;   // Assigned drive letter ['A' .. 'Z']
+    int     driveIndex;    // Logical drive index 0=A, 1=B, ..., 25=Z.
+    wstring drive;         // Drive string with trailing slash (for example, 'X:\').
+    wstring driveNoSlash;  // Drive string with no trailing slash ('X:').
+    wstring driveType;     // Type of drive volume
+
+    wstring volumeName;    // Unique volume name
+    wstring netMap;        // If applicable, the network map associated with the drive
+    wstring subst;         // Subst redirection
 
     // Info from GetVolumeInformation
-    bool     isVolInfoValid {false};  // True if we got the drive volume information.
-    wstring  volumeLabel;             // Drive label
-    DWORD    serialNumber {0};        // Volume serial number
-    DWORD    maxComponentLength {0};  // Maximum length for volume path components
-    DWORD    fileSysFlags {0};        // Flags for volume file system
-    wstring  fileSysName;             // Name of volume file system
-
-    wstring  volumeName;              // Unique volume name
-    wstring  netMap;                  // If applicable, the network map associated with the drive
-    wstring  subst;                   // Subst redirection
+    bool    isVolInfoValid {false};  // True if we got the drive volume information.
+    wstring volumeLabel;             // Drive label
+    DWORD   serialNumber {0};        // Volume serial number
+    DWORD   maxComponentLength {0};  // Maximum length for volume path components
+    DWORD   fileSysFlags {0};        // Flags for volume file system
+    wstring fileSysName;             // Name of volume file system
 
     // This class contains the information for a single drive.
 
@@ -378,14 +378,14 @@ class DriveInfo {
         wcout << "  {\n";
 
         wcout << L"    \"driveLetter\": \"" << driveLetter << "\",\n";
-        wcout << L"    \"volumeName\": \"" << escaped(volumeName) << "\",\n";
+        wcout << L"    \"volumeName\": \"" << Escape(volumeName) << "\",\n";
 
         if (isVolInfoValid) {
             wcout << L"    \"serialNumber\": \"" << hex;
             wcout << setw(4) << setfill(L'0') << (serialNumber >> 16) << L'-';
             wcout << setw(4) << setfill(L'0') << (serialNumber & 0xffff);
             wcout << dec << L"\",\n";
-            wcout << L"    \"label\": \"" << escaped(volumeLabel) << L"\",\n";
+            wcout << L"    \"label\": \"" << Escape(volumeLabel) << L"\",\n";
         } else {
             wcout << L"    \"serialNumber\": null,\n";
             wcout << L"    \"label\": null,\n";
@@ -397,13 +397,13 @@ class DriveInfo {
         if (!subst.length())
             wcout << "null,\n";
         else
-            wcout << "\"" << escaped(subst) << "\",\n";
+            wcout << "\"" << Escape(subst) << "\",\n";
 
         wcout << L"    \"networkMapping\": ";
         if (!netMap.length())
             wcout << "null\n";
         else
-            wcout << "\"" << escaped(netMap) << "\"\n";
+            wcout << "\"" << Escape(netMap) << "\"\n";
 
         if (isVolInfoValid) {
             wcout << L"    \"maxComponentLength\": " << maxComponentLength << ",\n";
