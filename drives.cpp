@@ -219,13 +219,6 @@ class DriveInfo {
         driveNoSlash {L"_:"}
     {
         drive[0] = driveNoSlash[0] = L'A' + driveIndex;
-    }
-
-    ~DriveInfo() {}
-
-    void LoadVolumeInformation() {
-
-        // Loads the volume information for this drive. Note that the drive letter was passed in at construction.
 
         driveType = DriveType(GetDriveTypeW (drive.c_str()));
 
@@ -258,6 +251,8 @@ class DriveInfo {
 
         GetNetworkMap();
     }
+
+    ~DriveInfo() {}
 
     void GetNetworkMap() {
         // Get the network-mapped connection, if any.
@@ -532,8 +527,8 @@ int wmain (int argc, wchar_t* argv[]) {
 
     if (commandOptions.singleDrive) {
         if (!DriveValid(logicalDrives, commandOptions.singleDrive)) {
-            wchar_t driveLetter = commandOptions.singleDrive;
-            wcout << commandOptions.programName << L": No volume present at drive " << driveLetter << L":." << endl;
+            wcout << commandOptions.programName
+                  << L": No volume present at drive " << commandOptions.singleDrive << L":." << endl;
             exit(1);
         }
         minDrive = maxDrive = commandOptions.singleDrive;
@@ -542,12 +537,8 @@ int wmain (int argc, wchar_t* argv[]) {
     // Query all drives for volume information, and get maximum field lengths.
 
     for (auto driveLetter = minDrive;  driveLetter <= maxDrive;  ++driveLetter) {
-        if (!DriveValid(logicalDrives, driveLetter))
-            continue;
-
-        auto driveInfo = new DriveInfo{driveLetter};
-        driveInfo->LoadVolumeInformation();
-        drives.push_back(*driveInfo);
+        if (DriveValid(logicalDrives, driveLetter))
+            drives.emplace_back(driveLetter);
     }
 
     // For each drive, print volume information.
