@@ -188,6 +188,45 @@ wstring DriveSubstitution(wchar_t driveLetter) {
 
 //======================================================================================================================
 
+wstring GetNetworkMap(const wstring& driveNoSlash) {
+    // Get the network-mapped connection for the specified drive, if any. The drive string should be
+    // a string consisting only of the drive letter followed by a colon.
+
+    DWORD netMapBufferSize {MAX_PATH + 1};
+    auto retry = false;    // True iff this is a retry.
+
+    vector<wchar_t> netMapBuffer(1 + netMapBufferSize);
+
+    do {
+        switch (WNetGetConnectionW (driveNoSlash.c_str(), netMapBuffer.data(), &netMapBufferSize)) {
+            case NO_ERROR:
+                break;
+
+            case ERROR_MORE_DATA:
+                netMapBuffer.reserve(netMapBufferSize);
+                retry = !retry;
+                break;
+
+            default:
+            case ERROR_BAD_DEVICE:
+            case ERROR_NOT_CONNECTED:
+            case ERROR_CONNECTION_UNAVAIL:
+            case ERROR_NO_NETWORK:
+            case ERROR_EXTENDED_ERROR:
+            case ERROR_NO_NET_OR_BAD_PATH:
+                netMapBuffer[0] = 0;
+                break;
+        }
+    } while (retry);
+
+    if (netMapBuffer[0])
+        return {netMapBuffer.data()};
+    else
+        return {};
+}
+
+//======================================================================================================================
+
 class DriveInfo {
   private:
 
@@ -222,12 +261,21 @@ class DriveInfo {
 
         driveType = DriveType(GetDriveTypeW (drive.c_str()));
 
+        wchar_t nameBuffer [MAX_PATH + 1];
+        if (GetVolumeNameForVolumeMountPointW (drive.c_str(), nameBuffer, sizeof nameBuffer))
+            volumeName = nameBuffer;
+        else
+            volumeName.clear();
+
+        subst = DriveSubstitution(driveLetter);
+        netMap = GetNetworkMap(driveNoSlash);
+
         wchar_t labelBuffer   [MAX_PATH + 1];   // Buffer for volume label
         wchar_t fileSysBuffer [MAX_PATH + 1];   // Buffer for file system name
 
         isVolInfoValid = (0 != GetVolumeInformationW (
             drive.c_str(), labelBuffer, sizeof labelBuffer, &serialNumber, &maxComponentLength, &fileSysFlags,
-            fileSysBuffer, sizeof fileSysBuffer));
+            fileSysBuffer, MAX_PATH + 1));
 
         if (isVolInfoValid) {
             volumeLabel = labelBuffer;
@@ -240,57 +288,9 @@ class DriveInfo {
             maxComponentLength = 0;
             fileSysFlags       = 0;
         }
-
-        wchar_t nameBuffer [MAX_PATH + 1];
-        if (GetVolumeNameForVolumeMountPointW (drive.c_str(), nameBuffer, sizeof nameBuffer))
-            volumeName = nameBuffer;
-        else
-            volumeName.clear();
-
-        subst = DriveSubstitution(driveLetter);
-
-        GetNetworkMap();
     }
 
     ~DriveInfo() {}
-
-    void GetNetworkMap() {
-        // Get the network-mapped connection, if any.
-
-        DWORD netMapBufferSize {MAX_PATH + 1};
-        auto netMapBuffer = new wchar_t[1 + netMapBufferSize];
-        auto retry = false;    // True iff this is a retry.
-
-        do {
-            switch (WNetGetConnectionW (driveNoSlash.c_str(), netMapBuffer, &netMapBufferSize)) {
-                case NO_ERROR:
-                    break;
-
-                case ERROR_MORE_DATA:
-                    delete[] netMapBuffer;
-                    netMapBuffer = retry ? nullptr : new wchar_t[netMapBufferSize];
-                    retry = !retry;
-                    break;
-
-                default:
-                case ERROR_BAD_DEVICE:
-                case ERROR_NOT_CONNECTED:
-                case ERROR_CONNECTION_UNAVAIL:
-                case ERROR_NO_NETWORK:
-                case ERROR_EXTENDED_ERROR:
-                case ERROR_NO_NET_OR_BAD_PATH:
-                    netMapBuffer[0] = 0;
-                    break;
-            }
-        } while (retry);
-
-        if (netMapBuffer && netMapBuffer[0])
-            netMap = netMapBuffer;
-        else
-            netMap.clear();
-
-        delete[] netMapBuffer;
-    }
 
     void GetMaxFieldLengths (size_t &maxLenVolumeLabel, size_t &maxLenDriveDesc) const {
         // Computes the maximum field lengths, incorporating the length of this drive's fields.
@@ -375,17 +375,6 @@ class DriveInfo {
         wcout << L"    \"driveLetter\": \"" << driveLetter << "\",\n";
         wcout << L"    \"volumeName\": \"" << Escape(volumeName) << "\",\n";
 
-        if (isVolInfoValid) {
-            wcout << L"    \"serialNumber\": \"" << hex;
-            wcout << setw(4) << setfill(L'0') << (serialNumber >> 16) << L'-';
-            wcout << setw(4) << setfill(L'0') << (serialNumber & 0xffff);
-            wcout << dec << L"\",\n";
-            wcout << L"    \"label\": \"" << Escape(volumeLabel) << L"\",\n";
-        } else {
-            wcout << L"    \"serialNumber\": null,\n";
-            wcout << L"    \"label\": null,\n";
-        }
-
         wcout << L"    \"driveType\": \"" << driveType << L"\",\n";
 
         wcout << L"    \"substituteFor\": ";
@@ -400,7 +389,19 @@ class DriveInfo {
         else
             wcout << "\"" << Escape(netMap) << "\",\n";
 
-        if (isVolInfoValid) {
+        if (!isVolInfoValid) {
+            wcout << L"    \"serialNumber\": null,\n";
+            wcout << L"    \"label\": null,\n";
+            wcout << L"    \"maxComponentLength\": null,\n";
+            wcout << L"    \"fileSystem\": null,\n";
+            wcout << L"    \"fileSystemFlagsValue\": 0,\n";
+            wcout << L"    \"fileSystemFlags\": null\n";
+        } else {
+            wcout << L"    \"serialNumber\": \"" << hex;
+            wcout << setw(4) << setfill(L'0') << (serialNumber >> 16) << L'-';
+            wcout << setw(4) << setfill(L'0') << (serialNumber & 0xffff);
+            wcout << dec << L"\",\n";
+            wcout << L"    \"label\": \"" << Escape(volumeLabel) << L"\",\n";
             wcout << L"    \"maxComponentLength\": " << maxComponentLength << ",\n";
             wcout << L"    \"fileSystem\": \"" << fileSysName << "\",\n";
             wcout << L"    \"fileSystemFlagsValue\": \"0x"
@@ -428,12 +429,6 @@ class DriveInfo {
             flagPrint (this, L"flagFSVolIsCompressed",         FS_VOL_IS_COMPRESSED);
 
             wcout << L"\n    }\n";
-
-        } else {
-            wcout << L"    \"maxComponentLength\": null,\n";
-            wcout << L"    \"fileSystem\": null,\n";
-            wcout << L"    \"fileSystemFlagsValue\": 0,\n";
-            wcout << L"    \"fileSystemFlags\": null\n";
         }
 
         wcout << "  }";
