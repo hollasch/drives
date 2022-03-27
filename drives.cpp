@@ -197,32 +197,20 @@ wstring GetNetworkMap(const wstring& driveNoSlash) {
 
     vector<wchar_t> netMapBuffer(1 + netMapBufferSize);
 
-    do {
-        switch (WNetGetConnectionW (driveNoSlash.c_str(), netMapBuffer.data(), &netMapBufferSize)) {
-            case NO_ERROR:
-                break;
+    auto result = WNetGetConnectionW (driveNoSlash.c_str(), netMapBuffer.data(), &netMapBufferSize);
+    if (result == ERROR_MORE_DATA) {
+        netMapBuffer.reserve(netMapBufferSize);
+        result = WNetGetConnectionW (driveNoSlash.c_str(), netMapBuffer.data(), &netMapBufferSize);
+    }
 
-            case ERROR_MORE_DATA:
-                netMapBuffer.reserve(netMapBufferSize);
-                retry = !retry;
-                break;
-
-            default:
-            case ERROR_BAD_DEVICE:
-            case ERROR_NOT_CONNECTED:
-            case ERROR_CONNECTION_UNAVAIL:
-            case ERROR_NO_NETWORK:
-            case ERROR_EXTENDED_ERROR:
-            case ERROR_NO_NET_OR_BAD_PATH:
-                netMapBuffer[0] = 0;
-                break;
-        }
-    } while (retry);
-
-    if (netMapBuffer[0])
-        return {netMapBuffer.data()};
-    else
+    if (result != NO_ERROR) {
+        // For all error results, return the empty string. Possible errors include ERROR_BAD_DEVICE,
+        // ERROR_NOT_CONNECTED, ERROR_CONNECTION_UNAVAIL, ERROR_NO_NETWORK, ERROR_EXTENDED_ERROR,
+        // ERROR_NO_NET_OR_BAD_PATH.
         return {};
+    }
+
+    return netMapBuffer.data();
 }
 
 //======================================================================================================================
