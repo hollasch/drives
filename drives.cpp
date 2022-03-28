@@ -403,18 +403,34 @@ class DriveInfo {
                 first = false;
             };
 
-            flagPrint (this, L"flagFileNamedStreams",          FILE_NAMED_STREAMS);
-            flagPrint (this, L"flagFileSupportsObjectIDs",     FILE_SUPPORTS_OBJECT_IDS);
-            flagPrint (this, L"flagFileSupportsReparsePoints", FILE_SUPPORTS_REPARSE_POINTS);
-            flagPrint (this, L"flagFileSupportsSparseFiles",   FILE_SUPPORTS_SPARSE_FILES);
-            flagPrint (this, L"flagFileVolumeQuotas",          FILE_VOLUME_QUOTAS);
-            flagPrint (this, L"flagFSCaseSensitive",           FS_CASE_SENSITIVE);
-            flagPrint (this, L"flagFSFileCompression",         FS_FILE_COMPRESSION);
-            flagPrint (this, L"flagFSFileEncryption",          FS_FILE_ENCRYPTION);
-            flagPrint (this, L"flagFSUnicodeStoredOnDisk",     FS_UNICODE_STORED_ON_DISK);
-            flagPrint (this, L"flagFSCaseIsPreserved",         FS_CASE_IS_PRESERVED);
-            flagPrint (this, L"flagFSPersistentACLs",          FS_PERSISTENT_ACLS);
-            flagPrint (this, L"flagFSVolIsCompressed",         FS_VOL_IS_COMPRESSED);
+            // These flags are in increasing value order (bit place, right-to-left).
+            flagPrint (this, L"caseSensitiveSearch",       FILE_CASE_SENSITIVE_SEARCH);
+            flagPrint (this, L"casePreservedNames",        FILE_CASE_PRESERVED_NAMES);
+            flagPrint (this, L"unicodeOnDisk",             FILE_UNICODE_ON_DISK);
+            flagPrint (this, L"persistentACLs",            FILE_PERSISTENT_ACLS);
+            flagPrint (this, L"fileCompression",           FILE_FILE_COMPRESSION);
+            flagPrint (this, L"volumeQuotas",              FILE_VOLUME_QUOTAS);
+            flagPrint (this, L"supportsSparseFiles",       FILE_SUPPORTS_SPARSE_FILES);
+            flagPrint (this, L"supportsReparsePoints",     FILE_SUPPORTS_REPARSE_POINTS);
+            flagPrint (this, L"supportsRemoteStorage",     FILE_SUPPORTS_REMOTE_STORAGE);
+            flagPrint (this, L"returnsCleanupResultInfo",  FILE_RETURNS_CLEANUP_RESULT_INFO);
+            flagPrint (this, L"supportsPosixUnlinkRename", FILE_SUPPORTS_POSIX_UNLINK_RENAME);
+            flagPrint (this, L"volumeIsCompressed",        FILE_VOLUME_IS_COMPRESSED);
+            flagPrint (this, L"supportsObjectIds",         FILE_SUPPORTS_OBJECT_IDS);
+            flagPrint (this, L"supportsEncryption",        FILE_SUPPORTS_ENCRYPTION);
+            flagPrint (this, L"namedStreams",              FILE_NAMED_STREAMS);
+            flagPrint (this, L"readOnlyVolume",            FILE_READ_ONLY_VOLUME);
+            flagPrint (this, L"sequentialWriteOnce",       FILE_SEQUENTIAL_WRITE_ONCE);
+            flagPrint (this, L"supportsTransactions",      FILE_SUPPORTS_TRANSACTIONS);
+            flagPrint (this, L"supportsHardLinks",         FILE_SUPPORTS_HARD_LINKS);
+            flagPrint (this, L"extendedAttributes",        FILE_SUPPORTS_EXTENDED_ATTRIBUTES);
+            flagPrint (this, L"supportsOpenByFileId",      FILE_SUPPORTS_OPEN_BY_FILE_ID);
+            flagPrint (this, L"supportsUSNJournal",        FILE_SUPPORTS_USN_JOURNAL);
+            flagPrint (this, L"supportsIntegrityStreams",  FILE_SUPPORTS_INTEGRITY_STREAMS);
+            flagPrint (this, L"supportsBlockRefcounting",  FILE_SUPPORTS_BLOCK_REFCOUNTING);
+            flagPrint (this, L"supportsSparseVDL",         FILE_SUPPORTS_SPARSE_VDL);
+            flagPrint (this, L"DAXvolume",                 FILE_DAX_VOLUME);
+            flagPrint (this, L"supportsGhosting",          FILE_SUPPORTS_GHOSTING);
 
             wcout << L"\n    }\n";
         }
@@ -469,7 +485,8 @@ Options
         Print help information.
 
     --json, -j
-        Print results in JSON format.
+        Print results in JSON format. To understand the file system flags, see documentation for the Windows
+        function GetVolumeInformationW().
 
     --verbose, -v
         Print full drive information for the human-readable format. This has no
