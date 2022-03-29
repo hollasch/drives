@@ -23,8 +23,6 @@ using namespace std;
 // Program Version (using the semantic versioning scheme)
 const auto programVersion = L"drives 3.0.0-alpha.1 | 2021-04-21 | https://github.com/hollasch/drives";
 
-const unsigned short NumPossibleDrives {26}; // Number of Possible Drives
-
 
 //======================================================================================================================
 
@@ -128,7 +126,9 @@ class CommandOptions {
 
 //======================================================================================================================
 
-bool DriveValid (DWORD logicalDrives, wchar_t driveLetter) {
+bool DriveValid (wchar_t driveLetter) {
+    static int logicalDrives = GetLogicalDrives();  // Query system logical drives.
+
     // Returns true if the drive letter is valid.
     return 0 != (logicalDrives & (1 << (driveLetter - L'A')));
 }
@@ -442,7 +442,7 @@ class DriveInfo {
 
 //======================================================================================================================
 
-void PrintResultsHuman(const CommandOptions& options, vector<DriveInfo>& drives, int logicalDrives) {
+void PrintResultsHuman(const CommandOptions& options, vector<DriveInfo>& drives) {
     size_t maxLenVolumeLabel {0};
     size_t maxLenDriveDesc {0};
 
@@ -455,7 +455,7 @@ void PrintResultsHuman(const CommandOptions& options, vector<DriveInfo>& drives,
 
 //======================================================================================================================
 
-void PrintResultsJSON(const CommandOptions& options, vector<DriveInfo>& drives, int logicalDrives) {
+void PrintResultsJSON(const CommandOptions& options, vector<DriveInfo>& drives) {
     wcout << "[\n";
 
     bool first = true;
@@ -517,16 +517,15 @@ int wmain (int argc, wchar_t* argv[]) {
         exit(0);
     }
 
-    int logicalDrives = GetLogicalDrives();         // Query system logical drives.
+//  int logicalDrives = GetLogicalDrives();         // Query system logical drives.
     vector<DriveInfo> drives;
-    wstring driveSubstitutions[NumPossibleDrives];  // Drive Substituttions
 
     // Handle single-drive reporting.
 
     wchar_t minDrive{L'A'}, maxDrive{L'Z'};
 
     if (commandOptions.singleDrive) {
-        if (!DriveValid(logicalDrives, commandOptions.singleDrive)) {
+        if (!DriveValid(commandOptions.singleDrive)) {
             wcout << commandOptions.programName
                   << L": No volume present at drive " << commandOptions.singleDrive << L":." << endl;
             exit(1);
@@ -537,14 +536,14 @@ int wmain (int argc, wchar_t* argv[]) {
     // Query all drives for volume information, and get maximum field lengths.
 
     for (auto driveLetter = minDrive;  driveLetter <= maxDrive;  ++driveLetter) {
-        if (DriveValid(logicalDrives, driveLetter))
+        if (DriveValid(driveLetter))
             drives.emplace_back(driveLetter);
     }
 
     // For each drive, print volume information.
 
     if (commandOptions.printJSON)
-        PrintResultsJSON(commandOptions, drives, logicalDrives);
+        PrintResultsJSON(commandOptions, drives);
     else
-        PrintResultsHuman(commandOptions, drives, logicalDrives);
+        PrintResultsHuman(commandOptions, drives);
 }
