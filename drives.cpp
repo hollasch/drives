@@ -271,7 +271,6 @@ class DriveInfo {
         } else {
             volumeLabel.clear();
             fileSysName.clear();
-
             serialNumber       = 0;
             maxComponentLength = 0;
             fileSysFlags       = 0;
@@ -282,7 +281,6 @@ class DriveInfo {
 
     void GetMaxFieldLengths (size_t &maxLenVolumeLabel, size_t &maxLenDriveDesc) const {
         // Computes the maximum field lengths, incorporating the length of this drive's fields.
-
         maxLenVolumeLabel = max (maxLenVolumeLabel, volumeLabel.length());
         maxLenDriveDesc   = max (maxLenDriveDesc,   driveType.length());
     }
@@ -301,19 +299,16 @@ class DriveInfo {
         // Print the volume label.
 
         maxLenVolumeLabel += 2;     // Add room for quotes to volume label.
-        auto lenVolumeLabel = (volumeLabel[0] == 0) ? 0 : 2 + volumeLabel.length();
-
         wstring formattedVolumeLabel;
 
-        if (volumeLabel.length())
+        if (!volumeLabel.empty())
             formattedVolumeLabel.append(L"\"").append(volumeLabel).append(L"\"");
-        else {
-            formattedVolumeLabel += L"-";
-            lenVolumeLabel = 1;
-        }
-        formattedVolumeLabel.append(maxLenVolumeLabel - lenVolumeLabel, L' ');
+        else
+            formattedVolumeLabel = L"-";
 
-        wcout << formattedVolumeLabel << L" ";
+        formattedVolumeLabel.append(maxLenVolumeLabel - formattedVolumeLabel.length(), L' ');
+
+        wcout << formattedVolumeLabel << L' ';
 
         // Print the volume serial number.
 
