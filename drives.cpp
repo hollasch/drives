@@ -315,16 +315,14 @@ class DriveInfo {
         if (!isVolInfoValid)
             wcout << L" -          ";
         else {
-            wcout << hex << L' ';
-            wcout << setw(4) << setfill(L'0') << (serialNumber >> 16) << L'-';
-            wcout << setw(4) << setfill(L'0') << (serialNumber & 0xffff);
-            wcout << L"  " << dec;
+            wcout << L' ';
+            wcout << hex << setw(4) << setfill(L'0') << (serialNumber >> 16) << L'-' << (serialNumber & 0xffff) << dec;
         }
 
         // Drive Type
         auto driveTypePadded = driveType;
         driveTypePadded.append (maxLenDriveDesc - driveType.length(), L' ');
-        wcout << driveTypePadded;
+        wcout << L"  " << driveTypePadded;
 
         // File System Type
         if (isVolInfoValid)
@@ -380,10 +378,9 @@ class DriveInfo {
             wcout << L"    \"fileSystemFlagsValue\": 0,\n";
             wcout << L"    \"fileSystemFlags\": null\n";
         } else {
-            wcout << L"    \"serialNumber\": \"" << hex;
-            wcout << setw(4) << setfill(L'0') << (serialNumber >> 16) << L'-';
-            wcout << setw(4) << setfill(L'0') << (serialNumber & 0xffff);
-            wcout << dec << L"\",\n";
+            wcout << L"    \"serialNumber\": \"" << hex << setw(4) << setfill(L'0')
+                  << (serialNumber >> 16) << L'-' << (serialNumber & 0xffff)
+                  << dec << L"\",\n";
             wcout << L"    \"label\": \"" << Escape(volumeLabel) << L"\",\n";
             wcout << L"    \"maxComponentLength\": " << maxComponentLength << ",\n";
             wcout << L"    \"fileSystem\": \"" << fileSysName << "\",\n";
