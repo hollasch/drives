@@ -384,43 +384,48 @@ class DriveInfo {
             wcout << L"    \"fileSystemFlagsValue\": \"0x"
                 <<hex <<setw(8) <<setfill(L'0') << fileSysFlags <<dec <<"\",\n";
 
-            wcout << L"    \"fileSystemFlags\": {\n";
-            bool first = true;
-            auto flagPrint = [&first](const DriveInfo* info, wstring desc, DWORD flag) {
-                if (!first) wcout << ",\n";
-                wcout << L"      \"" << desc << "\": " << ((info->fileSysFlags & flag) != 0);
-                first = false;
+            // These file-system flags are in increasing value order (bit place, right-to-left).
+            static const struct {
+                const wchar_t* name;
+                const long     value;
+            } sysFlagBits[] = {
+                { L"caseSensitiveSearch",       FILE_CASE_SENSITIVE_SEARCH },
+                { L"casePreservedNames",        FILE_CASE_PRESERVED_NAMES },
+                { L"unicodeOnDisk",             FILE_UNICODE_ON_DISK },
+                { L"persistentACLs",            FILE_PERSISTENT_ACLS },
+                { L"fileCompression",           FILE_FILE_COMPRESSION },
+                { L"volumeQuotas",              FILE_VOLUME_QUOTAS },
+                { L"supportsSparseFiles",       FILE_SUPPORTS_SPARSE_FILES },
+                { L"supportsReparsePoints",     FILE_SUPPORTS_REPARSE_POINTS },
+                { L"supportsRemoteStorage",     FILE_SUPPORTS_REMOTE_STORAGE },
+                { L"returnsCleanupResultInfo",  FILE_RETURNS_CLEANUP_RESULT_INFO },
+                { L"supportsPosixUnlinkRename", FILE_SUPPORTS_POSIX_UNLINK_RENAME },
+                { L"volumeIsCompressed",        FILE_VOLUME_IS_COMPRESSED },
+                { L"supportsObjectIds",         FILE_SUPPORTS_OBJECT_IDS },
+                { L"supportsEncryption",        FILE_SUPPORTS_ENCRYPTION },
+                { L"namedStreams",              FILE_NAMED_STREAMS },
+                { L"readOnlyVolume",            FILE_READ_ONLY_VOLUME },
+                { L"sequentialWriteOnce",       FILE_SEQUENTIAL_WRITE_ONCE },
+                { L"supportsTransactions",      FILE_SUPPORTS_TRANSACTIONS },
+                { L"supportsHardLinks",         FILE_SUPPORTS_HARD_LINKS },
+                { L"extendedAttributes",        FILE_SUPPORTS_EXTENDED_ATTRIBUTES },
+                { L"supportsOpenByFileId",      FILE_SUPPORTS_OPEN_BY_FILE_ID },
+                { L"supportsUSNJournal",        FILE_SUPPORTS_USN_JOURNAL },
+                { L"supportsIntegrityStreams",  FILE_SUPPORTS_INTEGRITY_STREAMS },
+                { L"supportsBlockRefcounting",  FILE_SUPPORTS_BLOCK_REFCOUNTING },
+                { L"supportsSparseVDL",         FILE_SUPPORTS_SPARSE_VDL },
+                { L"DAXvolume",                 FILE_DAX_VOLUME },
+                { L"supportsGhosting",          FILE_SUPPORTS_GHOSTING },
             };
 
-            // These flags are in increasing value order (bit place, right-to-left).
-            flagPrint (this, L"caseSensitiveSearch",       FILE_CASE_SENSITIVE_SEARCH);
-            flagPrint (this, L"casePreservedNames",        FILE_CASE_PRESERVED_NAMES);
-            flagPrint (this, L"unicodeOnDisk",             FILE_UNICODE_ON_DISK);
-            flagPrint (this, L"persistentACLs",            FILE_PERSISTENT_ACLS);
-            flagPrint (this, L"fileCompression",           FILE_FILE_COMPRESSION);
-            flagPrint (this, L"volumeQuotas",              FILE_VOLUME_QUOTAS);
-            flagPrint (this, L"supportsSparseFiles",       FILE_SUPPORTS_SPARSE_FILES);
-            flagPrint (this, L"supportsReparsePoints",     FILE_SUPPORTS_REPARSE_POINTS);
-            flagPrint (this, L"supportsRemoteStorage",     FILE_SUPPORTS_REMOTE_STORAGE);
-            flagPrint (this, L"returnsCleanupResultInfo",  FILE_RETURNS_CLEANUP_RESULT_INFO);
-            flagPrint (this, L"supportsPosixUnlinkRename", FILE_SUPPORTS_POSIX_UNLINK_RENAME);
-            flagPrint (this, L"volumeIsCompressed",        FILE_VOLUME_IS_COMPRESSED);
-            flagPrint (this, L"supportsObjectIds",         FILE_SUPPORTS_OBJECT_IDS);
-            flagPrint (this, L"supportsEncryption",        FILE_SUPPORTS_ENCRYPTION);
-            flagPrint (this, L"namedStreams",              FILE_NAMED_STREAMS);
-            flagPrint (this, L"readOnlyVolume",            FILE_READ_ONLY_VOLUME);
-            flagPrint (this, L"sequentialWriteOnce",       FILE_SEQUENTIAL_WRITE_ONCE);
-            flagPrint (this, L"supportsTransactions",      FILE_SUPPORTS_TRANSACTIONS);
-            flagPrint (this, L"supportsHardLinks",         FILE_SUPPORTS_HARD_LINKS);
-            flagPrint (this, L"extendedAttributes",        FILE_SUPPORTS_EXTENDED_ATTRIBUTES);
-            flagPrint (this, L"supportsOpenByFileId",      FILE_SUPPORTS_OPEN_BY_FILE_ID);
-            flagPrint (this, L"supportsUSNJournal",        FILE_SUPPORTS_USN_JOURNAL);
-            flagPrint (this, L"supportsIntegrityStreams",  FILE_SUPPORTS_INTEGRITY_STREAMS);
-            flagPrint (this, L"supportsBlockRefcounting",  FILE_SUPPORTS_BLOCK_REFCOUNTING);
-            flagPrint (this, L"supportsSparseVDL",         FILE_SUPPORTS_SPARSE_VDL);
-            flagPrint (this, L"DAXvolume",                 FILE_DAX_VOLUME);
-            flagPrint (this, L"supportsGhosting",          FILE_SUPPORTS_GHOSTING);
+            wcout << L"    \"fileSystemFlags\": {\n";
 
+            bool first = true;
+            for (auto sysFlag : sysFlagBits) {
+                if (!first) wcout << L",\n";
+                wcout << L"      \"" << sysFlag.name << L"\": " << (fileSysFlags & sysFlag.value ? 1 : 0);
+                first = false;
+            }
             wcout << L"\n    }\n";
         }
 
