@@ -330,12 +330,9 @@ class DriveInfo {
         else
             wcout << L" -      ";
 
-        // Drive substitution, if any.
-        if (subst.length())
-            wcout << L"--> " << subst;
-
-        // Mapping, if any.
-        if (netMap.length())
+        if (subst.length()) // Drive substitution, if any.
+            wcout << L"=== " << subst;
+        else if (netMap.length()) // Mapping, if any.
             wcout << L"--> " << netMap;
 
         // Print additional information if requested.
