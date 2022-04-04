@@ -499,7 +499,7 @@ int wmain (int argc, wchar_t* argv[]) {
     CommandOptions commandOptions;
 
     if (!commandOptions.parseArguments(argc, argv))
-        exit(1);
+        return 1;
 
     if (commandOptions.printVersion) {
         if (!commandOptions.printHelp) {
@@ -508,10 +508,9 @@ int wmain (int argc, wchar_t* argv[]) {
             wcout << helpText << programVersion << L'\n';
         }
 
-        exit(0);
+        return 0;
     }
 
-//  int logicalDrives = GetLogicalDrives();         // Query system logical drives.
     vector<DriveInfo> drives;
 
     // Handle single-drive reporting.
@@ -522,7 +521,7 @@ int wmain (int argc, wchar_t* argv[]) {
         if (!DriveValid(commandOptions.singleDrive)) {
             wcout << commandOptions.programName
                   << L": No volume present at drive " << commandOptions.singleDrive << L":." << endl;
-            exit(1);
+            return 1;
         }
         minDrive = maxDrive = commandOptions.singleDrive;
     }
@@ -540,4 +539,6 @@ int wmain (int argc, wchar_t* argv[]) {
         PrintResultsJSON(commandOptions, drives);
     else
         PrintResultsHuman(commandOptions, drives);
+
+    return 0;
 }
