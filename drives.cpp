@@ -21,7 +21,7 @@
 using namespace std;
 
 // Program Version (using the semantic versioning scheme)
-const auto programVersion = L"drives 3.0.0-alpha.1 | 2021-04-21 | https://github.com/hollasch/drives";
+const auto programVersion = L"drives 3.0.0-alpha.2 | 2022-04-07 | https://github.com/hollasch/drives";
 
 
 //======================================================================================================================
@@ -321,7 +321,7 @@ class DriveInfo {
 
         // Drive Type
         auto driveTypePadded = driveType;
-        driveTypePadded.append (maxLenDriveDesc - driveType.length(), L' ');
+        driveTypePadded.append(maxLenDriveDesc - driveType.length(), L' ');
         wcout << L"  " << driveTypePadded;
 
         // File System Type
@@ -468,23 +468,25 @@ drives: Print Windows drive and volume information
 usage : drives  [--json|-j] [--verbose|-v] [drive]
                 [--help|-h|/?] [--version]
 
-This program also prints all network mappings and drive substitutions (see the
-'subst' command).
+This program prints drive information for all devices, network mappings, DOS
+devices, and drive substitutions (via the `subst` command).
 
 Options
     [drive]
-        Optional drive letter for specific drive report (colon optional).
+        Optional drive letter for specific drive report (colon optional). If no
+        drive is specified, reports information for all drives.
 
     --help, -h, /?
         Print help information.
 
     --json, -j
-        Print results in JSON format. To understand the file system flags, see documentation for the Windows
-        function GetVolumeInformationW().
+        Print full drive information in JSON format. To understand the file
+        system flags, see documentation for the Windows function
+        GetVolumeInformationW().
 
     --verbose, -v
-        Print full drive information for the human-readable format. This has no
-        effect if --json is supplied.
+        Print additional information. This switch is ignored if the `--json`
+        option is supplied.
 
     --version
         Print program version.

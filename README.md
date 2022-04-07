@@ -10,40 +10,45 @@ command).
 
 Usage
 ------
-    drives v2.0.0 - print Windows drive and volume information
-    Source: https://github.com/hollasch/drives
+    drives: Print Windows drive and volume information
+    Usage:  drives [--json|-j] [--verbose|-v] [drive]
+            [--help|-h|/?] [--version]
 
-    Usage: drives [/?|-h|--help] [--version]
-           [-v|--verbose] [-p|--parseable] [drive]
+    This program prints drive information for all devices, network mappings, DOS
+    devices, and drive substitutions.
 
-    This program also prints all network mappings and drive substitutions
-    (see the 'subst' command).
+    Options
+        [drive]
+            Optional drive letter for specific drive report (colon optional). If no
+            drive is specified, reports information for all drives.
 
-    [drive]
-        Optional drive letter for specific drive report (colon optional)
+        --help, -h, /?
+            Print help information.
 
-    --help, -h, /?
-        Print help information.
+        --json, -j
+            Print full drive information in JSON format. To understand the file
+            system flags, see documentation for the Windows function
+            GetVolumeInformationW().
 
-    --verbose, -v
-        Print verbose; print additional information (only affects human format).
+        --verbose, -v
+            Print additional information. This switch is ignored if the `--json`
+            option is supplied.
 
-    --version
-        Print program version.
-
-    --parseable, -p
-        Print results in machine-parseable format.
+        --version
+            Print program version.
 
 
 Sample Output
 --------------
     C:\> drives
-    A: "Data"    3642-e068  Fixed     [NTFS]
-    C: "System"  b8c4-ce9e  Fixed     [NTFS]
-    D: -         -          CD-ROM    -
-    E: -         -          Removable -
-    X: "Data"    3642-e068  Fixed     [NTFS] --> A:\setup\apps
-
+    A: "Data"     69cc-bf14  Fixed     [NTFS]
+    B: "Backup"   182b-29c2  Fixed     [NTFS]
+    C: "System"   cf99-12f4  Fixed     [NTFS]
+    D: "USB"      a0f3-59a6  Removable [FAT32]
+    H: "NASStore" 9f8b-fd0f  Remote    [NTFS] --> \\common\files
+    R: -          -          CD-ROM    -
+    T: "Data"     fa6f-f71d  Fixed     [NTFS] === A:\setup
+    X: "Scratch"  4fdd-258e  Fixed     [NTFS] === C:\Users\Fred\scratch
 
 Building
 ----------

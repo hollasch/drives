@@ -9,6 +9,7 @@ Change Log -- drives
 ## Changed
   - Converted project from a fixed Visual Studio build to use CMake instead, assuming `build/` as
     the build directory.
+  - Lots of code refactoring and rewrites.
 
 ## Added
   - New JSON output option: `--json`.
