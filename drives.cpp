@@ -515,28 +515,23 @@ int wmain (int argc, wchar_t* argv[]) {
 
     vector<DriveInfo> drives;
 
-    // Handle single-drive reporting.
-
-    wchar_t minDrive{L'A'}, maxDrive{L'Z'};
-
     if (commandOptions.singleDrive) {
         if (!DriveValid(commandOptions.singleDrive)) {
             wcout << commandOptions.programName
                   << L": No volume present at drive " << commandOptions.singleDrive << L":." << endl;
             return 1;
         }
-        minDrive = maxDrive = commandOptions.singleDrive;
-    }
-
-    // Query all drives for volume information, and get maximum field lengths.
-
-    for (auto driveLetter = minDrive;  driveLetter <= maxDrive;  ++driveLetter) {
-        if (DriveValid(driveLetter))
-            drives.emplace_back(driveLetter);
+        const auto drive = commandOptions.singleDrive;
+        if (DriveValid(drive))
+            drives.emplace_back(drive);
+    } else {
+        // Query all drives for volume information.
+        for (auto driveLetter = L'A';  driveLetter <= L'Z';  ++driveLetter)
+            if (DriveValid(driveLetter))
+                drives.emplace_back(driveLetter);
     }
 
     // For each drive, print volume information.
-
     if (commandOptions.printJSON)
         PrintResultsJSON(commandOptions, drives);
     else
