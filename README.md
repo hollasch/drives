@@ -45,10 +45,10 @@ Sample Output
     B: "Backup"   182b-29c2  Fixed     [NTFS]
     C: "System"   cf99-12f4  Fixed     [NTFS]
     D: "USB"      a0f3-59a6  Removable [FAT32]
-    H: "NASStore" 9f8b-fd0f  Remote    [NTFS] --> \\common\files
+    H: "NASStore" 9f8b-fd0f  Remote    [NTFS]  --> \\common\files
     R: -          -          CD-ROM    -
-    T: "Data"     fa6f-f71d  Fixed     [NTFS] === A:\setup
-    X: "Scratch"  4fdd-258e  Fixed     [NTFS] === C:\Users\Fred\scratch
+    T: "Data"     fa6f-f71d  Fixed     [NTFS]  === A:\setup
+    X: "Scratch"  4fdd-258e  Fixed     [NTFS]  === C:\Users\Fred\scratch
 
 Building
 ----------

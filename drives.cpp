@@ -279,36 +279,34 @@ class DriveInfo {
 
     ~DriveInfo() {}
 
-    void GetMaxFieldLengths (size_t &maxLenVolumeLabel, size_t &maxLenDriveDesc) const {
-        // Computes the maximum field lengths, incorporating the length of this drive's fields.
-        maxLenVolumeLabel = max (maxLenVolumeLabel, volumeLabel.length());
-        maxLenDriveDesc   = max (maxLenDriveDesc,   driveType.length());
+    size_t WidthVolumeLabel(size_t currentWidth) const {
+        return max(volumeLabel.length(), currentWidth);
+    }
+
+    size_t WidthDriveType(size_t currentWidth) const {
+        return max(driveType.length(), currentWidth);
+    }
+
+    size_t WidthFileSysName(size_t currentWidth) const {
+        return max(fileSysName.length(), currentWidth);
     }
 
     void PrintVolumeInformation (
-        const CommandOptions& options, size_t maxLenVolumeLabel, size_t maxLenDriveDesc
+        const CommandOptions& options, size_t widthVolumeLabel, size_t widthDriveType, size_t widthFileSysName
     ) const {
         // Prints human-readable volume information for this drive.
-        //
-        // options:            Program options
-        // maxLenVolumeLabel:  Maximum string length for all volume labels.
-        // maxLenDriveDesc:    Maximum string length for all drive type strings.
 
         wcout << driveNoSlash << L' ';
 
         // Print the volume label.
 
-        maxLenVolumeLabel += 2;     // Add room for quotes to volume label.
-        wstring formattedVolumeLabel;
-
-        if (!volumeLabel.empty())
-            formattedVolumeLabel.append(L"\"").append(volumeLabel).append(L"\"");
+        if (volumeLabel.empty())
+            wcout << "- ";
         else
-            formattedVolumeLabel = L"-";
+            wcout << '"' << volumeLabel << '"';
 
-        formattedVolumeLabel.append(maxLenVolumeLabel - formattedVolumeLabel.length(), L' ');
-
-        wcout << formattedVolumeLabel << L' ';
+        if (volumeLabel.length() < widthVolumeLabel)
+            wcout << wstring(widthVolumeLabel - volumeLabel.length(), ' ');
 
         // Print the volume serial number.
 
@@ -320,15 +318,18 @@ class DriveInfo {
         }
 
         // Drive Type
-        auto driveTypePadded = driveType;
-        driveTypePadded.append(maxLenDriveDesc - driveType.length(), L' ');
-        wcout << L"  " << driveTypePadded;
+        wcout << L"  " << driveType << L' ';
+        if (driveType.length() < widthDriveType)
+            wcout << wstring(widthDriveType - driveType.length(), ' ');
 
         // File System Type
-        if (isVolInfoValid)
-            wcout << L" [" << fileSysName << L"] ";
-        else
-            wcout << L" -      ";
+        if (!isVolInfoValid)
+            wcout << L" -  ";
+        else {
+            wcout << '[' << fileSysName << "] ";
+            if (fileSysName.length() < widthFileSysName)
+                wcout << wstring(widthFileSysName - fileSysName.length(), ' ');
+        }
 
         if (subst.length()) // Drive substitution, if any.
             wcout << L"=== " << subst;
@@ -336,10 +337,13 @@ class DriveInfo {
             wcout << L"--> " << netMap;
 
         // Print additional information if requested.
-        if (options.printVerbose && volumeName.length())
-            wcout << L"\n   " << volumeName << "\n";
+        if (options.printVerbose) {
+            if (volumeName.length() > 0)
+                wcout << L"\n   " << volumeName;
+            wcout << '\n';
+        }
 
-        wcout << endl;
+        wcout << '\n';
     }
 
     void PrintJSONVolumeInformation(bool first) const {
@@ -437,14 +441,18 @@ class DriveInfo {
 //======================================================================================================================
 
 void PrintResultsHuman(const CommandOptions& options, vector<DriveInfo>& drives) {
-    size_t maxLenVolumeLabel {0};
-    size_t maxLenDriveDesc {0};
+    size_t widthVolumeLabel{0};
+    size_t widthDriveType{0};
+    size_t widthFileSysName{0};
+
+    for (const auto& drive : drives) {
+        widthVolumeLabel = drive.WidthVolumeLabel(widthVolumeLabel);
+        widthDriveType   = drive.WidthDriveType(widthDriveType);
+        widthFileSysName = drive.WidthFileSysName(widthFileSysName);
+    }
 
     for (const auto& drive : drives)
-        drive.GetMaxFieldLengths(maxLenVolumeLabel, maxLenDriveDesc);
-
-    for (const auto& drive : drives)
-        drive.PrintVolumeInformation(options, maxLenVolumeLabel, maxLenDriveDesc);
+        drive.PrintVolumeInformation(options, widthVolumeLabel, widthDriveType, widthFileSysName);
 }
 
 //======================================================================================================================
