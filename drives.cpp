@@ -21,7 +21,7 @@
 using namespace std;
 
 // Program Version (using the semantic versioning scheme)
-const auto programVersion = L"drives 3.0.0-alpha.2 | 2022-04-07 | https://github.com/hollasch/drives";
+const auto programVersion = L"drives 3.0.0-alpha.3 | 2022-04-09 | https://github.com/hollasch/drives";
 
 
 //======================================================================================================================
@@ -296,9 +296,11 @@ class DriveInfo {
     ) const {
         // Prints human-readable volume information for this drive.
 
+        // Drive Letter
+
         wcout << driveNoSlash << L' ';
 
-        // Print the volume label.
+        // Volume Label
 
         if (volumeLabel.empty())
             wcout << "- ";
@@ -308,35 +310,40 @@ class DriveInfo {
         if (volumeLabel.length() < widthVolumeLabel)
             wcout << wstring(widthVolumeLabel - volumeLabel.length(), ' ');
 
-        // Print the volume serial number.
+        // Volume Serial Number
 
         if (!isVolInfoValid)
-            wcout << L" -          ";
+            wcout << L" -        ";
         else {
             wcout << L' ';
             wcout << hex << setw(4) << setfill(L'0') << (serialNumber >> 16) << L'-' << (serialNumber & 0xffff) << dec;
         }
 
         // Drive Type
+
         wcout << L"  " << driveType << L' ';
         if (driveType.length() < widthDriveType)
             wcout << wstring(widthDriveType - driveType.length(), ' ');
 
         // File System Type
+
         if (!isVolInfoValid)
-            wcout << L" -  ";
-        else {
-            wcout << '[' << fileSysName << "] ";
-            if (fileSysName.length() < widthFileSysName)
-                wcout << wstring(widthFileSysName - fileSysName.length(), ' ');
-        }
+            wcout << " -";
+        else
+            wcout << ' ' << fileSysName << ' ';
+
+        if (fileSysName.length() < widthFileSysName)
+            wcout << wstring(widthFileSysName - fileSysName.length(), ' ');
+
+        // Drive Substitution or Network Mapping
 
         if (subst.length()) // Drive substitution, if any.
             wcout << L"=== " << subst;
         else if (netMap.length()) // Mapping, if any.
             wcout << L"--> " << netMap;
 
-        // Print additional information if requested.
+        // Verbose Information
+
         if (options.printVerbose) {
             if (volumeName.length() > 0)
                 wcout << L"\n   " << volumeName;
