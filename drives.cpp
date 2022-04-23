@@ -21,7 +21,7 @@
 using namespace std;
 
 // Program Version (using the semantic versioning scheme)
-const auto programVersion = L"drives 3.0.0-alpha.3 | 2022-04-09 | https://github.com/hollasch/drives";
+const auto programVersion = L"drives 3.0.0-alpha.4 | 2022-04-22 | https://github.com/hollasch/drives";
 
 
 //======================================================================================================================
@@ -215,6 +215,41 @@ wstring GetNetworkMap(const wstring& driveNoSlash) {
 
 //======================================================================================================================
 
+struct Thousands {
+    int64_t base;
+    wstring suffix;
+} thousands[] {
+    { 1'000'000'000'000'000'000, L" EB" },
+    { 1'000'000'000'000'000, L" PB" },
+    { 1'000'000'000'000, L" TB" },
+    { 1'000'000'000, L" GB" },
+    { 1'000'000, L" MB" },
+    { 1'000, L" KB" },
+};
+
+wstring numberPretty (int64_t value) {
+    // Return a pretty-printed string (with thousands suffix) of the input value.
+
+    // Handle the case of numbers less than 1,000 (including negative values).
+    if (value < 1'000)
+        return std::move(to_wstring(value) + L" B");
+
+    // Identify the proper thousands group of the value.
+    const Thousands *group = thousands;
+    while (value < group->base)
+        ++group;
+
+    // Get the significant digits of the value as a multiplier of the base (KB, MB, GB, ...).
+    auto sigDigits = static_cast<double>(value) / group->base;
+
+    wchar_t buffer[] = L"1.234";
+    swprintf(buffer, size(buffer), L"%5f", sigDigits);
+
+    return std::move(wstring{buffer} + group->suffix);
+}
+
+//======================================================================================================================
+
 class DriveInfo {
   private:
 
@@ -224,9 +259,18 @@ class DriveInfo {
     wstring driveNoSlash;  // Drive string with no trailing slash ('X:').
     wstring driveType;     // Type of drive volume
 
-    wstring volumeName;    // Unique volume name
+    wstring volumeGUID;    // Unique volume GUID
     wstring netMap;        // If applicable, the network map associated with the drive
     wstring subst;         // Subst redirection
+
+    // Drive Capacity and Use
+    DWORD   sectorsPerCluster {0};
+    DWORD   bytesPerSector {0};
+    DWORD   clustersFree {0};
+    DWORD   clustersTotal {0};
+    int64_t bytesTotal {0};
+    int64_t bytesFree {0};
+    double  percentFree {0};
 
     // Info from GetVolumeInformation
     bool    isVolInfoValid {false};  // True if we got the drive volume information.
@@ -239,6 +283,7 @@ class DriveInfo {
     // This class contains the information for a single drive.
 
   public:
+
     DriveInfo (wchar_t _driveLetter /* in [L'A', L'Z'] */)
       : driveLetter{_driveLetter},
         driveIndex {_driveLetter - L'A'},
@@ -250,10 +295,14 @@ class DriveInfo {
         driveType = DriveType(GetDriveTypeW (drive.c_str()));
 
         wchar_t nameBuffer [MAX_PATH + 1];
-        if (GetVolumeNameForVolumeMountPointW (drive.c_str(), nameBuffer, sizeof nameBuffer))
-            volumeName = nameBuffer;
-        else
-            volumeName.clear();
+        if (GetVolumeNameForVolumeMountPointW (drive.c_str(), nameBuffer, sizeof nameBuffer)) {
+            // The standard volume name is of the form "\\?\Volume{GUID}\". Extract just the GUID.
+
+            volumeGUID = nameBuffer;
+            auto guidStart = volumeGUID.find_first_of(L'{') + 1;
+            auto guidLen = volumeGUID.find_last_of(L'}') - guidStart;
+            volumeGUID = volumeGUID.substr(guidStart, guidLen);
+        }
 
         subst = DriveSubstitution(driveLetter);
         netMap = GetNetworkMap(driveNoSlash);
@@ -275,6 +324,15 @@ class DriveInfo {
             maxComponentLength = 0;
             fileSysFlags       = 0;
         }
+
+        // Get drive capacity information.
+        if (GetDiskFreeSpaceW(drive.c_str(), &sectorsPerCluster, &bytesPerSector, &clustersFree, &clustersTotal)) {
+            int64_t bytesPerCluster = bytesPerSector * int64_t(sectorsPerCluster);
+            bytesTotal = bytesPerCluster * clustersTotal;
+            bytesFree  = bytesPerCluster * clustersFree;
+        }
+
+        percentFree = 100.0 * static_cast<double>(bytesFree) / static_cast<double>(bytesTotal);
     }
 
     ~DriveInfo() {}
@@ -338,16 +396,25 @@ class DriveInfo {
         // Drive Substitution or Network Mapping
 
         if (subst.length()) // Drive substitution, if any.
-            wcout << L"=== " << subst;
+            wcout << L"  === " << subst;
         else if (netMap.length()) // Mapping, if any.
-            wcout << L"--> " << netMap;
+            wcout << L"  --> " << netMap;
+        else if (volumeGUID.length() > 0)
+            wcout << L"  " << volumeGUID;
 
         // Verbose Information
 
         if (options.printVerbose) {
-            if (volumeName.length() > 0)
-                wcout << L"\n   " << volumeName;
-            wcout << '\n';
+            wcout << L"\n   " << numberPretty(bytesFree) << " (";
+
+            if (percentFree > 99.99)
+                wcout << "100.0";
+            else {
+                auto priorPrecision = wcout.precision();
+                wcout << defaultfloat << setprecision(4) << percentFree << setprecision(priorPrecision);
+            }
+
+            wcout << "%) free / " << numberPretty(bytesTotal) << '\n';
         }
 
         wcout << '\n';
@@ -360,9 +427,12 @@ class DriveInfo {
             wcout << ",\n";
 
         wcout << "  {\n";
-
         wcout << L"    \"driveLetter\": \"" << driveLetter << "\",\n";
-        wcout << L"    \"volumeName\": \"" << Escape(volumeName) << "\",\n";
+
+        if (volumeGUID.length() > 0)
+            wcout << L"    \"volumeName\": \"\\\\\\\\?\\\\Volume{" << volumeGUID << "}\\\\\",\n";
+        else
+            wcout << L"    \"volumeName\": null,\n";
 
         wcout << L"    \"driveType\": \"" << driveType << L"\",\n";
 
@@ -384,7 +454,7 @@ class DriveInfo {
             wcout << L"    \"maxComponentLength\": null,\n";
             wcout << L"    \"fileSystem\": null,\n";
             wcout << L"    \"fileSystemFlagsValue\": 0,\n";
-            wcout << L"    \"fileSystemFlags\": null\n";
+            wcout << L"    \"fileSystemFlags\": null";
         } else {
             wcout << L"    \"serialNumber\": \"" << hex << setw(4) << setfill(L'0')
                   << (serialNumber >> 16) << L'-' << (serialNumber & 0xffff)
@@ -437,10 +507,21 @@ class DriveInfo {
                 wcout << L"      \"" << sysFlag.name << L"\": " << (fileSysFlags & sysFlag.value ? 1 : 0);
                 first = false;
             }
-            wcout << L"\n    }\n";
+
+            wcout << L"\n    }";
         }
 
-        wcout << "  }";
+        // Drive Capacity and Usage
+        if (clustersTotal > 0) {
+            wcout << L",\n";
+            wcout << L"    \"capacityBytes\": " << bytesTotal << ",\n";
+            wcout << L"    \"capacityPretty\": \"" << numberPretty(bytesTotal) << "\",\n";
+            wcout << L"    \"freeBytes\": " << bytesFree << ",\n";
+            wcout << L"    \"freePretty\": \"" << numberPretty(bytesFree) << "\",\n";
+            wcout << L"    \"percentFree\": " << percentFree;
+        }
+
+        wcout << "\n  }";
     }
 
 };
@@ -486,6 +567,20 @@ usage : drives  [--json|-j] [--verbose|-v] [drive]
 This program prints drive information for all devices, network mappings, DOS
 devices, and drive substitutions (via the `subst` command).
 
+Unless the `--json` option is supplied, the following drive values will be
+printed, in this order:
+
+    - Drive Letter
+    - Label
+    - Serial Number
+    - Type (No root, Removable, Fixed, Remote, CD-ROM, or RAM Disk)
+    - File System (for example, NTFS, FAT, or FAT32)
+    - Volume GUID, drive substitution or target, or network mapping
+
+The volume GUID can be used in a formal volume name, with the following form:
+
+    \\?\Volume{GUID}\
+
 Options
     [drive]
         Optional drive letter for specific drive report (colon optional). If no
@@ -500,8 +595,9 @@ Options
         GetVolumeInformationW().
 
     --verbose, -v
-        Print additional information. This switch is ignored if the `--json`
-        option is supplied.
+        Generally, print additional volume information. This switch is ignored
+        if the `--json` option is supplied. Additional volume information
+        includes the amount of free space and the total drive capacity.
 
     --version
         Print program version.
