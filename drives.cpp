@@ -21,7 +21,7 @@
 using namespace std;
 
 // Program Version (using the semantic versioning scheme)
-const auto programVersion = L"drives 3.0.0-alpha.4 | 2022-04-22 | https://github.com/hollasch/drives";
+const auto programVersion = L"drives v3.0.0 | 2022-04-22 | https://github.com/hollasch/drives";
 
 
 //======================================================================================================================

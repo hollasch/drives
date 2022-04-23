@@ -1,7 +1,7 @@
 Change Log -- drives
 ====================================================================================================
 
-# v3.0.0  (in progress)
+# v3.0.0  (2022-04-22)
 
 ## Removed
   - Dropped the old machine-parseable output option in exchange for the new JSON output option.

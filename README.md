@@ -52,7 +52,7 @@ Usage
         --version
             Print program version.
 
-    drives 3.0.0-alpha.4 | 2022-04-22 | https://github.com/hollasch/drives
+    drives v3.0.0 | 2022-04-22 | https://github.com/hollasch/drives
 
 Sample Output
 --------------
