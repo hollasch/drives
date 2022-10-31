@@ -21,7 +21,7 @@
 using namespace std;
 
 // Program Version (using the semantic versioning scheme)
-const auto programVersion = L"drives v3.0.0 | 2022-04-22 | https://github.com/hollasch/drives";
+const auto programVersion = L"drives v3.0.1 | 2022-10-31 | https://github.com/hollasch/drives";
 
 
 //======================================================================================================================
@@ -374,7 +374,11 @@ class DriveInfo {
             wcout << L" -        ";
         else {
             wcout << L' ';
-            wcout << hex << setw(4) << setfill(L'0') << (serialNumber >> 16) << L'-' << (serialNumber & 0xffff) << dec;
+            wcout << hex;
+            wcout << setw(4) << setfill(L'0') << (serialNumber >> 16);
+            wcout << L'-';
+            wcout << setw(4) << setfill(L'0') << (serialNumber & 0xffff);
+            wcout << dec;
         }
 
         // Drive Type
