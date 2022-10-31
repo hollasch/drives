@@ -3,7 +3,7 @@ Change Log -- drives
 
 # v3.0.1  (2022-10-31)
 
-## Fixes
+## Fixed
   - Fixed bug where second word of drive serial number was not zero-padded to four hex digits.
 
 
